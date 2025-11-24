@@ -217,8 +217,8 @@
             optionsToolStripMenuItem = new ToolStripMenuItem();
             preferencesToolStripMenuItem = new ToolStripMenuItem();
             helpToolStripMenuItem = new ToolStripMenuItem();
-            aboutToolStripMenuItem = new ToolStripMenuItem();
             documentationToolStripMenuItem = new ToolStripMenuItem();
+            aboutToolStripMenuItem = new ToolStripMenuItem();
             mainToolStrip = new ToolStrip();
             newToolStripButton = new ToolStripButton();
             openToolStripButton = new ToolStripButton();
@@ -235,30 +235,29 @@
             spacerLabel = new ToolStripStatusLabel();
             timeLabel = new ToolStripStatusLabel();
             topPanel = new Panel();
-            bottomPanel = new Panel();
-            leftPanel = new Panel();
-            
-            // Initialize TradingChartGrid ToolStrips
-            gridLayoutToolStrip = new ToolStrip();
-            chartControlsToolStrip = new ToolStrip();
-            dataDisplayToolStrip = new ToolStrip();
             dataFilterToolStrip = new ToolStrip();
-            
-            // Grid Layout ToolStrip Items
-            linearLayoutBtn = new ToolStripButton();
-            customLayoutBtn = new ToolStripButton();
-            hybridLayoutBtn = new ToolStripButton();
-            separator1 = new ToolStripSeparator();
-            addRowBtn = new ToolStripButton();
-            removeRowBtn = new ToolStripButton();
-            addColBtn = new ToolStripButton();
-            removeColBtn = new ToolStripButton();
-            separator2 = new ToolStripSeparator();
-            mainChartBtn = new ToolStripButton();
-            technicalStackBtn = new ToolStripButton();
-            multiTimeframeBtn = new ToolStripButton();
-            
-            // Chart Controls ToolStrip Items
+            lblFilterMode = new ToolStripLabel();
+            cmbFilterMode = new ToolStripComboBox();
+            lblFilterIndex1 = new ToolStripLabel();
+            txtFilterIndex1 = new ToolStripTextBox();
+            lblFilterIndex2 = new ToolStripLabel();
+            txtFilterIndex2 = new ToolStripTextBox();
+            lblFilterDateTime1 = new ToolStripLabel();
+            lblFilterDateTime2 = new ToolStripLabel();
+            btnApplyFilter = new ToolStripButton();
+            lblFilterStatus = new ToolStripLabel();
+            dataDisplayToolStrip = new ToolStrip();
+            lblDataMode = new ToolStripLabel();
+            cmbDisplayMode = new ToolStripComboBox();
+            lblIndex1 = new ToolStripLabel();
+            txtIndex1 = new ToolStripTextBox();
+            lblIndex2 = new ToolStripLabel();
+            txtIndex2 = new ToolStripTextBox();
+            lblDateTime1 = new ToolStripLabel();
+            lblDateTime2 = new ToolStripLabel();
+            btnApplyDisplay = new ToolStripButton();
+            lblDisplayStatus = new ToolStripLabel();
+            chartControlsToolStrip = new ToolStrip();
             panLeftBtn = new ToolStripButton();
             zoomInXBtn = new ToolStripButton();
             resetXBtn = new ToolStripButton();
@@ -279,35 +278,21 @@
             crosshairModeCombo = new ToolStripComboBox();
             setAllNoneBtn = new ToolStripButton();
             setAllBothBtn = new ToolStripButton();
-            
-            // Data Display Mode ToolStrip Items
-            lblDataMode = new ToolStripLabel();
-            cmbDisplayMode = new ToolStripComboBox();
-            lblIndex1 = new ToolStripLabel();
-            txtIndex1 = new ToolStripTextBox();
-            lblIndex2 = new ToolStripLabel();
-            txtIndex2 = new ToolStripTextBox();
-            lblDateTime1 = new ToolStripLabel();
-            dtpHost1 = new ToolStripControlHost(new DateTimePicker());
-            lblDateTime2 = new ToolStripLabel();
-            dtpHost2 = new ToolStripControlHost(new DateTimePicker());
-            btnApplyDisplay = new ToolStripButton();
-            lblDisplayStatus = new ToolStripLabel();
-            
-            // DataReader Filter ToolStrip Items
-            lblFilterMode = new ToolStripLabel();
-            cmbFilterMode = new ToolStripComboBox();
-            lblFilterIndex1 = new ToolStripLabel();
-            txtFilterIndex1 = new ToolStripTextBox();
-            lblFilterIndex2 = new ToolStripLabel();
-            txtFilterIndex2 = new ToolStripTextBox();
-            lblFilterDateTime1 = new ToolStripLabel();
-            dtpFilterHost1 = new ToolStripControlHost(new DateTimePicker());
-            lblFilterDateTime2 = new ToolStripLabel();
-            dtpFilterHost2 = new ToolStripControlHost(new DateTimePicker());
-            btnApplyFilter = new ToolStripButton();
-            lblFilterStatus = new ToolStripLabel();
-            
+            gridLayoutToolStrip = new ToolStrip();
+            linearLayoutBtn = new ToolStripButton();
+            customLayoutBtn = new ToolStripButton();
+            hybridLayoutBtn = new ToolStripButton();
+            separator1 = new ToolStripSeparator();
+            addRowBtn = new ToolStripButton();
+            removeRowBtn = new ToolStripButton();
+            addColBtn = new ToolStripButton();
+            removeColBtn = new ToolStripButton();
+            separator2 = new ToolStripSeparator();
+            mainChartBtn = new ToolStripButton();
+            technicalStackBtn = new ToolStripButton();
+            multiTimeframeBtn = new ToolStripButton();
+            bottomPanel = new Panel();
+            leftPanel = new Panel();
             button4 = new Button();
             button2 = new Button();
             button3 = new Button();
@@ -337,6 +322,11 @@
             mainMenu.SuspendLayout();
             mainToolStrip.SuspendLayout();
             statusBar.SuspendLayout();
+            topPanel.SuspendLayout();
+            dataFilterToolStrip.SuspendLayout();
+            dataDisplayToolStrip.SuspendLayout();
+            chartControlsToolStrip.SuspendLayout();
+            gridLayoutToolStrip.SuspendLayout();
             leftPanel.SuspendLayout();
             SuspendLayout();
             // 
@@ -351,7 +341,7 @@
             // 
             // fileToolStripMenuItem
             // 
-            fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { newToolStripMenuItem, openToolStripMenuItem, new ToolStripSeparator(), saveToolStripMenuItem, saveAsToolStripMenuItem, new ToolStripSeparator(), exitToolStripMenuItem });
+            fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { newToolStripMenuItem, openToolStripMenuItem, saveToolStripMenuItem, saveAsToolStripMenuItem, exitToolStripMenuItem });
             fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             fileToolStripMenuItem.Size = new Size(37, 20);
             fileToolStripMenuItem.Text = "&File";
@@ -396,7 +386,7 @@
             // 
             // editToolStripMenuItem
             // 
-            editToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { undoToolStripMenuItem, redoToolStripMenuItem, new ToolStripSeparator(), cutToolStripMenuItem, copyToolStripMenuItem, pasteToolStripMenuItem, new ToolStripSeparator(), selectAllToolStripMenuItem });
+            editToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { undoToolStripMenuItem, redoToolStripMenuItem, cutToolStripMenuItem, copyToolStripMenuItem, pasteToolStripMenuItem, selectAllToolStripMenuItem });
             editToolStripMenuItem.Name = "editToolStripMenuItem";
             editToolStripMenuItem.Size = new Size(39, 20);
             editToolStripMenuItem.Text = "&Edit";
@@ -451,7 +441,7 @@
             // 
             // viewToolStripMenuItem
             // 
-            viewToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { toolbarsToolStripMenuItem, statusBarToolStripMenuItem, new ToolStripSeparator(), fullScreenToolStripMenuItem });
+            viewToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { toolbarsToolStripMenuItem, statusBarToolStripMenuItem, fullScreenToolStripMenuItem });
             viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             viewToolStripMenuItem.Size = new Size(44, 20);
             viewToolStripMenuItem.Text = "&View";
@@ -459,7 +449,7 @@
             // toolbarsToolStripMenuItem
             // 
             toolbarsToolStripMenuItem.Name = "toolbarsToolStripMenuItem";
-            toolbarsToolStripMenuItem.Size = new Size(135, 22);
+            toolbarsToolStripMenuItem.Size = new Size(156, 22);
             toolbarsToolStripMenuItem.Text = "&Toolbars";
             toolbarsToolStripMenuItem.Click += toolbarsToolStripMenuItem_Click;
             // 
@@ -468,7 +458,7 @@
             statusBarToolStripMenuItem.Checked = true;
             statusBarToolStripMenuItem.CheckState = CheckState.Checked;
             statusBarToolStripMenuItem.Name = "statusBarToolStripMenuItem";
-            statusBarToolStripMenuItem.Size = new Size(135, 22);
+            statusBarToolStripMenuItem.Size = new Size(156, 22);
             statusBarToolStripMenuItem.Text = "&Status Bar";
             statusBarToolStripMenuItem.Click += statusBarToolStripMenuItem_Click;
             // 
@@ -476,7 +466,7 @@
             // 
             fullScreenToolStripMenuItem.Name = "fullScreenToolStripMenuItem";
             fullScreenToolStripMenuItem.ShortcutKeys = Keys.F11;
-            fullScreenToolStripMenuItem.Size = new Size(135, 22);
+            fullScreenToolStripMenuItem.Size = new Size(156, 22);
             fullScreenToolStripMenuItem.Text = "&Full Screen";
             fullScreenToolStripMenuItem.Click += fullScreenToolStripMenuItem_Click;
             // 
@@ -503,7 +493,7 @@
             // 
             // helpToolStripMenuItem
             // 
-            helpToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { documentationToolStripMenuItem, new ToolStripSeparator(), aboutToolStripMenuItem });
+            helpToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { documentationToolStripMenuItem, aboutToolStripMenuItem });
             helpToolStripMenuItem.Name = "helpToolStripMenuItem";
             helpToolStripMenuItem.Size = new Size(44, 20);
             helpToolStripMenuItem.Text = "&Help";
@@ -512,14 +502,14 @@
             // 
             documentationToolStripMenuItem.Name = "documentationToolStripMenuItem";
             documentationToolStripMenuItem.ShortcutKeys = Keys.F1;
-            documentationToolStripMenuItem.Size = new Size(168, 22);
+            documentationToolStripMenuItem.Size = new Size(176, 22);
             documentationToolStripMenuItem.Text = "&Documentation";
             documentationToolStripMenuItem.Click += documentationToolStripMenuItem_Click;
             // 
             // aboutToolStripMenuItem
             // 
             aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            aboutToolStripMenuItem.Size = new Size(168, 22);
+            aboutToolStripMenuItem.Size = new Size(176, 22);
             aboutToolStripMenuItem.Text = "&About";
             aboutToolStripMenuItem.Click += aboutToolStripMenuItem_Click;
             // 
@@ -551,7 +541,7 @@
             // 
             saveToolStripButton.DisplayStyle = ToolStripItemDisplayStyle.Text;
             saveToolStripButton.Name = "saveToolStripButton";
-            saveToolStripButton.Size = new Size(52, 22);
+            saveToolStripButton.Size = new Size(50, 22);
             saveToolStripButton.Text = "💾 Save";
             saveToolStripButton.ToolTipText = "Save the current file (Ctrl+S)";
             // 
@@ -572,7 +562,7 @@
             // 
             copyToolStripButton.DisplayStyle = ToolStripItemDisplayStyle.Text;
             copyToolStripButton.Name = "copyToolStripButton";
-            copyToolStripButton.Size = new Size(55, 22);
+            copyToolStripButton.Size = new Size(54, 22);
             copyToolStripButton.Text = "📋 Copy";
             copyToolStripButton.ToolTipText = "Copy selected content (Ctrl+C)";
             // 
@@ -580,7 +570,7 @@
             // 
             pasteToolStripButton.DisplayStyle = ToolStripItemDisplayStyle.Text;
             pasteToolStripButton.Name = "pasteToolStripButton";
-            pasteToolStripButton.Size = new Size(58, 22);
+            pasteToolStripButton.Size = new Size(54, 22);
             pasteToolStripButton.Text = "📌 Paste";
             pasteToolStripButton.ToolTipText = "Paste clipboard content (Ctrl+V)";
             // 
@@ -593,7 +583,7 @@
             // 
             helpToolStripButton.DisplayStyle = ToolStripItemDisplayStyle.Text;
             helpToolStripButton.Name = "helpToolStripButton";
-            helpToolStripButton.Size = new Size(52, 22);
+            helpToolStripButton.Size = new Size(51, 22);
             helpToolStripButton.Text = "❓ Help";
             helpToolStripButton.ToolTipText = "Show help documentation (F1)";
             // 
@@ -619,14 +609,13 @@
             // spacerLabel
             // 
             spacerLabel.Name = "spacerLabel";
-            spacerLabel.Size = new Size(10, 20);
+            spacerLabel.Size = new Size(768, 20);
             spacerLabel.Spring = true;
-            spacerLabel.Text = "";
             // 
             // timeLabel
             // 
             timeLabel.Name = "timeLabel";
-            timeLabel.Size = new Size(120, 20);
+            timeLabel.Size = new Size(49, 20);
             timeLabel.Text = "00:00:00";
             timeLabel.TextAlign = ContentAlignment.MiddleRight;
             // 
@@ -643,6 +632,400 @@
             topPanel.Name = "topPanel";
             topPanel.Size = new Size(973, 120);
             topPanel.TabIndex = 3;
+            // 
+            // dataFilterToolStrip
+            // 
+            dataFilterToolStrip.BackColor = Color.LightGoldenrodYellow;
+            dataFilterToolStrip.Items.AddRange(new ToolStripItem[] { lblFilterMode, cmbFilterMode, lblFilterIndex1, txtFilterIndex1, lblFilterIndex2, txtFilterIndex2, lblFilterDateTime1, lblFilterDateTime2, btnApplyFilter, lblFilterStatus });
+            dataFilterToolStrip.Location = new Point(0, 77);
+            dataFilterToolStrip.Name = "dataFilterToolStrip";
+            dataFilterToolStrip.Size = new Size(971, 25);
+            dataFilterToolStrip.TabIndex = 3;
+            // 
+            // lblFilterMode
+            // 
+            lblFilterMode.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblFilterMode.Name = "lblFilterMode";
+            lblFilterMode.Size = new Size(108, 22);
+            lblFilterMode.Text = "DataReader Filter:";
+            // 
+            // cmbFilterMode
+            // 
+            cmbFilterMode.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbFilterMode.Items.AddRange(new object[] { "All", "LastN", "FirstN", "IndexRange", "AfterDateTime", "BeforeDateTime", "DateTimeRange" });
+            cmbFilterMode.Name = "cmbFilterMode";
+            cmbFilterMode.Size = new Size(120, 25);
+            cmbFilterMode.ToolTipText = "Select data filter mode";
+            // 
+            // lblFilterIndex1
+            // 
+            lblFilterIndex1.Name = "lblFilterIndex1";
+            lblFilterIndex1.Size = new Size(25, 22);
+            lblFilterIndex1.Text = "N1:";
+            // 
+            // txtFilterIndex1
+            // 
+            txtFilterIndex1.Name = "txtFilterIndex1";
+            txtFilterIndex1.Size = new Size(70, 25);
+            txtFilterIndex1.Text = "300";
+            txtFilterIndex1.ToolTipText = "First index or count value";
+            // 
+            // lblFilterIndex2
+            // 
+            lblFilterIndex2.Name = "lblFilterIndex2";
+            lblFilterIndex2.Size = new Size(25, 22);
+            lblFilterIndex2.Text = "N2:";
+            // 
+            // txtFilterIndex2
+            // 
+            txtFilterIndex2.Name = "txtFilterIndex2";
+            txtFilterIndex2.Size = new Size(70, 25);
+            txtFilterIndex2.Text = "2000";
+            txtFilterIndex2.ToolTipText = "Second index value for range";
+            // 
+            // lblFilterDateTime1
+            // 
+            lblFilterDateTime1.Name = "lblFilterDateTime1";
+            lblFilterDateTime1.Size = new Size(40, 22);
+            lblFilterDateTime1.Text = "Date1:";
+            // 
+            // lblFilterDateTime2
+            // 
+            lblFilterDateTime2.Name = "lblFilterDateTime2";
+            lblFilterDateTime2.Size = new Size(40, 22);
+            lblFilterDateTime2.Text = "Date2:";
+            // 
+            // btnApplyFilter
+            // 
+            btnApplyFilter.BackColor = Color.LightGreen;
+            btnApplyFilter.Name = "btnApplyFilter";
+            btnApplyFilter.Size = new Size(71, 22);
+            btnApplyFilter.Text = "Apply Filter";
+            btnApplyFilter.ToolTipText = "Apply the selected filter to data reading";
+            // 
+            // lblFilterStatus
+            // 
+            lblFilterStatus.Name = "lblFilterStatus";
+            lblFilterStatus.Size = new Size(53, 22);
+            lblFilterStatus.Text = "Filter: All";
+            // 
+            // dataDisplayToolStrip
+            // 
+            dataDisplayToolStrip.BackColor = Color.LightSteelBlue;
+            dataDisplayToolStrip.Items.AddRange(new ToolStripItem[] { lblDataMode, cmbDisplayMode, lblIndex1, txtIndex1, lblIndex2, txtIndex2, lblDateTime1, lblDateTime2, btnApplyDisplay, lblDisplayStatus });
+            dataDisplayToolStrip.Location = new Point(0, 52);
+            dataDisplayToolStrip.Name = "dataDisplayToolStrip";
+            dataDisplayToolStrip.Size = new Size(971, 25);
+            dataDisplayToolStrip.TabIndex = 2;
+            // 
+            // lblDataMode
+            // 
+            lblDataMode.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblDataMode.Name = "lblDataMode";
+            lblDataMode.Size = new Size(78, 22);
+            lblDataMode.Text = "Data Display:";
+            // 
+            // cmbDisplayMode
+            // 
+            cmbDisplayMode.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbDisplayMode.Items.AddRange(new object[] { "All", "FitToScreen", "LastN", "FirstN", "IndexRange", "AfterDateTime", "BeforeDateTime", "DateTimeRange" });
+            cmbDisplayMode.Name = "cmbDisplayMode";
+            cmbDisplayMode.Size = new Size(120, 25);
+            cmbDisplayMode.ToolTipText = "Select data display mode";
+            // 
+            // lblIndex1
+            // 
+            lblIndex1.Name = "lblIndex1";
+            lblIndex1.Size = new Size(25, 22);
+            lblIndex1.Text = "N1:";
+            // 
+            // txtIndex1
+            // 
+            txtIndex1.Name = "txtIndex1";
+            txtIndex1.Size = new Size(70, 25);
+            txtIndex1.Text = "300";
+            txtIndex1.ToolTipText = "First index or count value";
+            // 
+            // lblIndex2
+            // 
+            lblIndex2.Name = "lblIndex2";
+            lblIndex2.Size = new Size(25, 22);
+            lblIndex2.Text = "N2:";
+            // 
+            // txtIndex2
+            // 
+            txtIndex2.Name = "txtIndex2";
+            txtIndex2.Size = new Size(70, 25);
+            txtIndex2.Text = "2000";
+            txtIndex2.ToolTipText = "Second index value for range";
+            // 
+            // lblDateTime1
+            // 
+            lblDateTime1.Name = "lblDateTime1";
+            lblDateTime1.Size = new Size(40, 22);
+            lblDateTime1.Text = "Date1:";
+            // 
+            // lblDateTime2
+            // 
+            lblDateTime2.Name = "lblDateTime2";
+            lblDateTime2.Size = new Size(40, 22);
+            lblDateTime2.Text = "Date2:";
+            // 
+            // btnApplyDisplay
+            // 
+            btnApplyDisplay.BackColor = Color.LightGreen;
+            btnApplyDisplay.Name = "btnApplyDisplay";
+            btnApplyDisplay.Size = new Size(83, 22);
+            btnApplyDisplay.Text = "Apply Display";
+            btnApplyDisplay.ToolTipText = "Apply the selected display mode";
+            // 
+            // lblDisplayStatus
+            // 
+            lblDisplayStatus.Name = "lblDisplayStatus";
+            lblDisplayStatus.Size = new Size(92, 22);
+            lblDisplayStatus.Text = "Mode: FitScreen";
+            // 
+            // chartControlsToolStrip
+            // 
+            chartControlsToolStrip.BackColor = Color.LightGray;
+            chartControlsToolStrip.Items.AddRange(new ToolStripItem[] { panLeftBtn, zoomInXBtn, resetXBtn, zoomOutXBtn, panRightBtn, panUpBtn, zoomInYBtn, resetYBtn, zoomOutYBtn, panDownBtn, resetAllBtn, separator4, zoomModeCombo, panModeCombo, wheelModeCombo, resetModeCombo, dragModeCombo, crosshairModeCombo, setAllNoneBtn, setAllBothBtn });
+            chartControlsToolStrip.Location = new Point(0, 25);
+            chartControlsToolStrip.Name = "chartControlsToolStrip";
+            chartControlsToolStrip.Size = new Size(971, 27);
+            chartControlsToolStrip.TabIndex = 1;
+            // 
+            // panLeftBtn
+            // 
+            panLeftBtn.Name = "panLeftBtn";
+            panLeftBtn.Size = new Size(23, 24);
+            panLeftBtn.Text = "←";
+            panLeftBtn.ToolTipText = "Tüm chart'larda sola kaydır";
+            // 
+            // zoomInXBtn
+            // 
+            zoomInXBtn.Name = "zoomInXBtn";
+            zoomInXBtn.Size = new Size(26, 24);
+            zoomInXBtn.Text = "X+";
+            zoomInXBtn.ToolTipText = "Tüm chart'larda X zoom in";
+            // 
+            // resetXBtn
+            // 
+            resetXBtn.Name = "resetXBtn";
+            resetXBtn.Size = new Size(25, 24);
+            resetXBtn.Text = "RX";
+            resetXBtn.ToolTipText = "Tüm chart'larda X reset";
+            // 
+            // zoomOutXBtn
+            // 
+            zoomOutXBtn.Name = "zoomOutXBtn";
+            zoomOutXBtn.Size = new Size(23, 24);
+            zoomOutXBtn.Text = "X-";
+            zoomOutXBtn.ToolTipText = "Tüm chart'larda X zoom out";
+            // 
+            // panRightBtn
+            // 
+            panRightBtn.Name = "panRightBtn";
+            panRightBtn.Size = new Size(23, 24);
+            panRightBtn.Text = "→";
+            panRightBtn.ToolTipText = "Tüm chart'larda sağa kaydır";
+            // 
+            // panUpBtn
+            // 
+            panUpBtn.Name = "panUpBtn";
+            panUpBtn.Size = new Size(23, 24);
+            panUpBtn.Text = "↑";
+            panUpBtn.ToolTipText = "Tüm chart'larda yukarı kaydır";
+            // 
+            // zoomInYBtn
+            // 
+            zoomInYBtn.Name = "zoomInYBtn";
+            zoomInYBtn.Size = new Size(26, 24);
+            zoomInYBtn.Text = "Y+";
+            zoomInYBtn.ToolTipText = "Tüm chart'larda Y zoom in";
+            // 
+            // resetYBtn
+            // 
+            resetYBtn.Name = "resetYBtn";
+            resetYBtn.Size = new Size(25, 24);
+            resetYBtn.Text = "RY";
+            resetYBtn.ToolTipText = "Tüm chart'larda Y reset";
+            // 
+            // zoomOutYBtn
+            // 
+            zoomOutYBtn.Name = "zoomOutYBtn";
+            zoomOutYBtn.Size = new Size(23, 24);
+            zoomOutYBtn.Text = "Y-";
+            zoomOutYBtn.ToolTipText = "Tüm chart'larda Y zoom out";
+            // 
+            // panDownBtn
+            // 
+            panDownBtn.Name = "panDownBtn";
+            panDownBtn.Size = new Size(23, 24);
+            panDownBtn.Text = "↓";
+            panDownBtn.ToolTipText = "Tüm chart'larda aşağı kaydır";
+            // 
+            // resetAllBtn
+            // 
+            resetAllBtn.Name = "resetAllBtn";
+            resetAllBtn.Size = new Size(23, 24);
+            resetAllBtn.Text = "⟲";
+            resetAllBtn.ToolTipText = "Tüm chart'larda tam reset";
+            // 
+            // separator4
+            // 
+            separator4.Name = "separator4";
+            separator4.Size = new Size(6, 27);
+            // 
+            // zoomModeCombo
+            // 
+            zoomModeCombo.Items.AddRange(new object[] { "None", "OnlyX", "OnlyY", "Both" });
+            zoomModeCombo.Name = "zoomModeCombo";
+            zoomModeCombo.Size = new Size(121, 27);
+            zoomModeCombo.Text = "Both";
+            zoomModeCombo.ToolTipText = "Zoom modu";
+            // 
+            // panModeCombo
+            // 
+            panModeCombo.Items.AddRange(new object[] { "None", "OnlyX", "OnlyY", "Both" });
+            panModeCombo.Name = "panModeCombo";
+            panModeCombo.Size = new Size(121, 27);
+            panModeCombo.Text = "Both";
+            panModeCombo.ToolTipText = "Pan modu";
+            // 
+            // wheelModeCombo
+            // 
+            wheelModeCombo.Items.AddRange(new object[] { "None", "OnlyX", "OnlyY", "Both" });
+            wheelModeCombo.Name = "wheelModeCombo";
+            wheelModeCombo.Size = new Size(121, 27);
+            wheelModeCombo.Text = "Both";
+            wheelModeCombo.ToolTipText = "Mouse wheel modu";
+            // 
+            // resetModeCombo
+            // 
+            resetModeCombo.Items.AddRange(new object[] { "None", "OnlyX", "OnlyY", "Both" });
+            resetModeCombo.Name = "resetModeCombo";
+            resetModeCombo.Size = new Size(121, 27);
+            resetModeCombo.Text = "Both";
+            resetModeCombo.ToolTipText = "Reset modu";
+            // 
+            // dragModeCombo
+            // 
+            dragModeCombo.Items.AddRange(new object[] { "None", "OnlyX", "OnlyY", "Both" });
+            dragModeCombo.Name = "dragModeCombo";
+            dragModeCombo.Size = new Size(121, 27);
+            dragModeCombo.Text = "Both";
+            dragModeCombo.ToolTipText = "Drag modu";
+            // 
+            // crosshairModeCombo
+            // 
+            crosshairModeCombo.Items.AddRange(new object[] { "None", "Vertical", "Horizontal", "Both" });
+            crosshairModeCombo.Name = "crosshairModeCombo";
+            crosshairModeCombo.Size = new Size(121, 23);
+            crosshairModeCombo.Text = "Both";
+            crosshairModeCombo.ToolTipText = "Crosshair modu";
+            // 
+            // setAllNoneBtn
+            // 
+            setAllNoneBtn.Name = "setAllNoneBtn";
+            setAllNoneBtn.Size = new Size(46, 19);
+            setAllNoneBtn.Text = "ALL: N";
+            setAllNoneBtn.ToolTipText = "Tüm modları 'None' yap";
+            // 
+            // setAllBothBtn
+            // 
+            setAllBothBtn.Name = "setAllBothBtn";
+            setAllBothBtn.Size = new Size(44, 19);
+            setAllBothBtn.Text = "ALL: B";
+            setAllBothBtn.ToolTipText = "Tüm modları 'Both' yap";
+            // 
+            // gridLayoutToolStrip
+            // 
+            gridLayoutToolStrip.BackColor = Color.LightGray;
+            gridLayoutToolStrip.Items.AddRange(new ToolStripItem[] { linearLayoutBtn, customLayoutBtn, hybridLayoutBtn, separator1, addRowBtn, removeRowBtn, addColBtn, removeColBtn, separator2, mainChartBtn, technicalStackBtn, multiTimeframeBtn });
+            gridLayoutToolStrip.Location = new Point(0, 0);
+            gridLayoutToolStrip.Name = "gridLayoutToolStrip";
+            gridLayoutToolStrip.Size = new Size(971, 25);
+            gridLayoutToolStrip.TabIndex = 0;
+            // 
+            // linearLayoutBtn
+            // 
+            linearLayoutBtn.Name = "linearLayoutBtn";
+            linearLayoutBtn.Size = new Size(43, 22);
+            linearLayoutBtn.Text = "Linear";
+            linearLayoutBtn.ToolTipText = "Linear layout - Alt alta düzen";
+            // 
+            // customLayoutBtn
+            // 
+            customLayoutBtn.Name = "customLayoutBtn";
+            customLayoutBtn.Size = new Size(53, 22);
+            customLayoutBtn.Text = "Custom";
+            customLayoutBtn.ToolTipText = "Custom layout - Manuel grid";
+            // 
+            // hybridLayoutBtn
+            // 
+            hybridLayoutBtn.Name = "hybridLayoutBtn";
+            hybridLayoutBtn.Size = new Size(47, 22);
+            hybridLayoutBtn.Text = "Hybrid";
+            hybridLayoutBtn.ToolTipText = "Hybrid layout - Preset layoutlar";
+            // 
+            // separator1
+            // 
+            separator1.Name = "separator1";
+            separator1.Size = new Size(6, 25);
+            // 
+            // addRowBtn
+            // 
+            addRowBtn.Name = "addRowBtn";
+            addRowBtn.Size = new Size(45, 22);
+            addRowBtn.Text = "+ Row";
+            addRowBtn.ToolTipText = "Satır ekle";
+            // 
+            // removeRowBtn
+            // 
+            removeRowBtn.Name = "removeRowBtn";
+            removeRowBtn.Size = new Size(42, 22);
+            removeRowBtn.Text = "- Row";
+            removeRowBtn.ToolTipText = "Satır sil";
+            // 
+            // addColBtn
+            // 
+            addColBtn.Name = "addColBtn";
+            addColBtn.Size = new Size(40, 22);
+            addColBtn.Text = "+ Col";
+            addColBtn.ToolTipText = "Sütun ekle";
+            // 
+            // removeColBtn
+            // 
+            removeColBtn.Name = "removeColBtn";
+            removeColBtn.Size = new Size(37, 22);
+            removeColBtn.Text = "- Col";
+            removeColBtn.ToolTipText = "Sütun sil";
+            // 
+            // separator2
+            // 
+            separator2.Name = "separator2";
+            separator2.Size = new Size(6, 25);
+            // 
+            // mainChartBtn
+            // 
+            mainChartBtn.Name = "mainChartBtn";
+            mainChartBtn.Size = new Size(70, 22);
+            mainChartBtn.Text = "Main Chart";
+            mainChartBtn.ToolTipText = "Ana chart + yan paneller";
+            // 
+            // technicalStackBtn
+            // 
+            technicalStackBtn.Name = "technicalStackBtn";
+            technicalStackBtn.Size = new Size(92, 22);
+            technicalStackBtn.Text = "Technical Stack";
+            technicalStackBtn.ToolTipText = "Teknik analiz yığını";
+            // 
+            // multiTimeframeBtn
+            // 
+            multiTimeframeBtn.Name = "multiTimeframeBtn";
+            multiTimeframeBtn.Size = new Size(55, 22);
+            multiTimeframeBtn.Text = "Multi TF";
+            multiTimeframeBtn.ToolTipText = "Çoklu zaman dilimi";
             // 
             // bottomPanel
             // 
@@ -683,9 +1066,9 @@
             leftPanel.Controls.Add(btnCreateGrid);
             leftPanel.Controls.Add(leftTitleLabel);
             leftPanel.Dock = DockStyle.Left;
-            leftPanel.Location = new Point(0, 109);
+            leftPanel.Location = new Point(0, 169);
             leftPanel.Name = "leftPanel";
-            leftPanel.Size = new Size(238, 528);
+            leftPanel.Size = new Size(238, 468);
             leftPanel.TabIndex = 1;
             // 
             // button4
@@ -916,9 +1299,9 @@
             rightPanel.BackColor = Color.LightCoral;
             rightPanel.BorderStyle = BorderStyle.FixedSingle;
             rightPanel.Dock = DockStyle.Right;
-            rightPanel.Location = new Point(853, 109);
+            rightPanel.Location = new Point(853, 169);
             rightPanel.Name = "rightPanel";
-            rightPanel.Size = new Size(120, 528);
+            rightPanel.Size = new Size(120, 468);
             rightPanel.TabIndex = 0;
             // 
             // centerPanel
@@ -926,9 +1309,9 @@
             centerPanel.BackColor = Color.White;
             centerPanel.BorderStyle = BorderStyle.FixedSingle;
             centerPanel.Dock = DockStyle.Fill;
-            centerPanel.Location = new Point(238, 109);
+            centerPanel.Location = new Point(238, 169);
             centerPanel.Name = "centerPanel";
-            centerPanel.Size = new Size(615, 528);
+            centerPanel.Size = new Size(615, 468);
             centerPanel.TabIndex = 4;
             // 
             // Form1
@@ -953,222 +1336,16 @@
             mainToolStrip.PerformLayout();
             statusBar.ResumeLayout(false);
             statusBar.PerformLayout();
-            // 
-            // gridLayoutToolStrip
-            // 
-            gridLayoutToolStrip.Dock = DockStyle.Top;
-            gridLayoutToolStrip.BackColor = Color.LightGray;
-            gridLayoutToolStrip.Items.AddRange(new ToolStripItem[] {
-                linearLayoutBtn, customLayoutBtn, hybridLayoutBtn, separator1,
-                addRowBtn, removeRowBtn, addColBtn, removeColBtn, separator2,
-                mainChartBtn, technicalStackBtn, multiTimeframeBtn
-            });
-            gridLayoutToolStrip.Location = new Point(0, 0);
-            gridLayoutToolStrip.Name = "gridLayoutToolStrip";
-            gridLayoutToolStrip.Size = new Size(971, 25);
-            gridLayoutToolStrip.TabIndex = 0;
-            
-            // Grid Layout Buttons
-            linearLayoutBtn.Text = "Linear";
-            linearLayoutBtn.ToolTipText = "Linear layout - Alt alta düzen";
-            customLayoutBtn.Text = "Custom";
-            customLayoutBtn.ToolTipText = "Custom layout - Manuel grid";
-            hybridLayoutBtn.Text = "Hybrid";
-            hybridLayoutBtn.ToolTipText = "Hybrid layout - Preset layoutlar";
-            addRowBtn.Text = "+ Row";
-            addRowBtn.ToolTipText = "Satır ekle";
-            removeRowBtn.Text = "- Row";
-            removeRowBtn.ToolTipText = "Satır sil";
-            addColBtn.Text = "+ Col";
-            addColBtn.ToolTipText = "Sütun ekle";
-            removeColBtn.Text = "- Col";
-            removeColBtn.ToolTipText = "Sütun sil";
-            mainChartBtn.Text = "Main Chart";
-            mainChartBtn.ToolTipText = "Ana chart + yan paneller";
-            technicalStackBtn.Text = "Technical Stack";
-            technicalStackBtn.ToolTipText = "Teknik analiz yığını";
-            multiTimeframeBtn.Text = "Multi TF";
-            multiTimeframeBtn.ToolTipText = "Çoklu zaman dilimi";
-            
-            // 
-            // chartControlsToolStrip
-            // 
-            chartControlsToolStrip.Dock = DockStyle.Top;
-            chartControlsToolStrip.BackColor = Color.LightGray;
-            chartControlsToolStrip.Items.AddRange(new ToolStripItem[] {
-                panLeftBtn, zoomInXBtn, resetXBtn, zoomOutXBtn, panRightBtn,
-                panUpBtn, zoomInYBtn, resetYBtn, zoomOutYBtn, panDownBtn, resetAllBtn,
-                separator4,
-                new ToolStripLabel("Zoom:"), zoomModeCombo,
-                new ToolStripLabel("Pan:"), panModeCombo,
-                new ToolStripLabel("Wheel:"), wheelModeCombo,
-                new ToolStripLabel("Reset:"), resetModeCombo,
-                new ToolStripLabel("Drag:"), dragModeCombo,
-                new ToolStripLabel("Cross:"), crosshairModeCombo,
-                new ToolStripSeparator(),
-                setAllNoneBtn, setAllBothBtn
-            });
-            chartControlsToolStrip.Location = new Point(0, 25);
-            chartControlsToolStrip.Name = "chartControlsToolStrip";
-            chartControlsToolStrip.Size = new Size(971, 25);
-            chartControlsToolStrip.TabIndex = 1;
-            
-            // Chart Control Buttons
-            panLeftBtn.Text = "←";
-            panLeftBtn.ToolTipText = "Tüm chart'larda sola kaydır";
-            zoomInXBtn.Text = "X+";
-            zoomInXBtn.ToolTipText = "Tüm chart'larda X zoom in";
-            resetXBtn.Text = "RX";
-            resetXBtn.ToolTipText = "Tüm chart'larda X reset";
-            zoomOutXBtn.Text = "X-";
-            zoomOutXBtn.ToolTipText = "Tüm chart'larda X zoom out";
-            panRightBtn.Text = "→";
-            panRightBtn.ToolTipText = "Tüm chart'larda sağa kaydır";
-            panUpBtn.Text = "↑";
-            panUpBtn.ToolTipText = "Tüm chart'larda yukarı kaydır";
-            zoomInYBtn.Text = "Y+";
-            zoomInYBtn.ToolTipText = "Tüm chart'larda Y zoom in";
-            resetYBtn.Text = "RY";
-            resetYBtn.ToolTipText = "Tüm chart'larda Y reset";
-            zoomOutYBtn.Text = "Y-";
-            zoomOutYBtn.ToolTipText = "Tüm chart'larda Y zoom out";
-            panDownBtn.Text = "↓";
-            panDownBtn.ToolTipText = "Tüm chart'larda aşağı kaydır";
-            resetAllBtn.Text = "⟲";
-            resetAllBtn.ToolTipText = "Tüm chart'larda tam reset";
-            setAllNoneBtn.Text = "ALL: N";
-            setAllNoneBtn.ToolTipText = "Tüm modları 'None' yap";
-            setAllBothBtn.Text = "ALL: B";
-            setAllBothBtn.ToolTipText = "Tüm modları 'Both' yap";
-            
-            // Chart Control ComboBoxes
-            zoomModeCombo.Name = "ZoomMode";
-            zoomModeCombo.ToolTipText = "Zoom modu";
-            zoomModeCombo.Items.AddRange(new string[] { "None", "OnlyX", "OnlyY", "Both" });
-            zoomModeCombo.SelectedItem = "Both";
-            panModeCombo.Name = "PanMode";
-            panModeCombo.ToolTipText = "Pan modu";
-            panModeCombo.Items.AddRange(new string[] { "None", "OnlyX", "OnlyY", "Both" });
-            panModeCombo.SelectedItem = "Both";
-            wheelModeCombo.Name = "WheelMode";
-            wheelModeCombo.ToolTipText = "Mouse wheel modu";
-            wheelModeCombo.Items.AddRange(new string[] { "None", "OnlyX", "OnlyY", "Both" });
-            wheelModeCombo.SelectedItem = "Both";
-            resetModeCombo.Name = "ResetMode";
-            resetModeCombo.ToolTipText = "Reset modu";
-            resetModeCombo.Items.AddRange(new string[] { "None", "OnlyX", "OnlyY", "Both" });
-            resetModeCombo.SelectedItem = "Both";
-            dragModeCombo.Name = "DragMode";
-            dragModeCombo.ToolTipText = "Drag modu";
-            dragModeCombo.Items.AddRange(new string[] { "None", "OnlyX", "OnlyY", "Both" });
-            dragModeCombo.SelectedItem = "Both";
-            crosshairModeCombo.Name = "CrosshairMode";
-            crosshairModeCombo.ToolTipText = "Crosshair modu";
-            crosshairModeCombo.Items.AddRange(new string[] { "None", "Vertical", "Horizontal", "Both" });
-            crosshairModeCombo.SelectedItem = "Both";
-            
-            // 
-            // dataDisplayToolStrip
-            // 
-            dataDisplayToolStrip.Dock = DockStyle.Top;
-            dataDisplayToolStrip.BackColor = Color.LightSteelBlue;
-            dataDisplayToolStrip.Items.AddRange(new ToolStripItem[] {
-                lblDataMode, new ToolStripSeparator(), cmbDisplayMode, new ToolStripSeparator(),
-                lblIndex1, txtIndex1, lblIndex2, txtIndex2, new ToolStripSeparator(),
-                lblDateTime1, dtpHost1, lblDateTime2, dtpHost2, new ToolStripSeparator(),
-                btnApplyDisplay, lblDisplayStatus
-            });
-            dataDisplayToolStrip.Location = new Point(0, 50);
-            dataDisplayToolStrip.Name = "dataDisplayToolStrip";
-            dataDisplayToolStrip.Size = new Size(971, 25);
-            dataDisplayToolStrip.TabIndex = 2;
-            
-            // Data Display Mode Controls
-            lblDataMode.Text = "Data Display:";
-            lblDataMode.Font = new Font("Segoe UI", 9, FontStyle.Bold);
-            cmbDisplayMode.DropDownStyle = ComboBoxStyle.DropDownList;
-            cmbDisplayMode.Size = new Size(120, 25);
-            cmbDisplayMode.ToolTipText = "Select data display mode";
-            cmbDisplayMode.Items.AddRange(new object[] {
-                "All", "FitToScreen", "LastN", "FirstN", "IndexRange",
-                "AfterDateTime", "BeforeDateTime", "DateTimeRange"
-            });
-            cmbDisplayMode.SelectedIndex = 0;
-            lblIndex1.Text = "N1:";
-            txtIndex1.Text = "300";
-            txtIndex1.Size = new Size(70, 25);
-            txtIndex1.ToolTipText = "First index or count value";
-            lblIndex2.Text = "N2:";
-            txtIndex2.Text = "2000";
-            txtIndex2.Size = new Size(70, 25);
-            txtIndex2.ToolTipText = "Second index value for range";
-            lblDateTime1.Text = "Date1:";
-            ((DateTimePicker)dtpHost1.Control).Format = DateTimePickerFormat.Short;
-            ((DateTimePicker)dtpHost1.Control).Value = new DateTime(2025, 11, 12);
-            ((DateTimePicker)dtpHost1.Control).Size = new Size(100, 25);
-            dtpHost1.ToolTipText = "Start date for date filtering";
-            lblDateTime2.Text = "Date2:";
-            ((DateTimePicker)dtpHost2.Control).Format = DateTimePickerFormat.Short;
-            ((DateTimePicker)dtpHost2.Control).Value = new DateTime(2025, 11, 12, 23, 59, 59);
-            ((DateTimePicker)dtpHost2.Control).Size = new Size(100, 25);
-            dtpHost2.ToolTipText = "End date for date filtering";
-            btnApplyDisplay.Text = "Apply Display";
-            btnApplyDisplay.ToolTipText = "Apply the selected display mode";
-            btnApplyDisplay.BackColor = Color.LightGreen;
-            lblDisplayStatus.Text = "Mode: FitScreen";
-            lblDisplayStatus.Name = "lblDisplayStatus";
-            
-            // 
-            // dataFilterToolStrip
-            // 
-            dataFilterToolStrip.Dock = DockStyle.Top;
-            dataFilterToolStrip.BackColor = Color.LightGoldenrodYellow;
-            dataFilterToolStrip.Items.AddRange(new ToolStripItem[] {
-                lblFilterMode, new ToolStripSeparator(), cmbFilterMode, new ToolStripSeparator(),
-                lblFilterIndex1, txtFilterIndex1, lblFilterIndex2, txtFilterIndex2, new ToolStripSeparator(),
-                lblFilterDateTime1, dtpFilterHost1, lblFilterDateTime2, dtpFilterHost2, new ToolStripSeparator(),
-                btnApplyFilter, lblFilterStatus
-            });
-            dataFilterToolStrip.Location = new Point(0, 75);
-            dataFilterToolStrip.Name = "dataFilterToolStrip";
-            dataFilterToolStrip.Size = new Size(971, 25);
-            dataFilterToolStrip.TabIndex = 3;
-            
-            // DataReader Filter Controls
-            lblFilterMode.Text = "DataReader Filter:";
-            lblFilterMode.Font = new Font("Segoe UI", 9, FontStyle.Bold);
-            cmbFilterMode.DropDownStyle = ComboBoxStyle.DropDownList;
-            cmbFilterMode.Size = new Size(120, 25);
-            cmbFilterMode.ToolTipText = "Select data filter mode";
-            cmbFilterMode.Items.AddRange(new object[] {
-                "All", "LastN", "FirstN", "IndexRange",
-                "AfterDateTime", "BeforeDateTime", "DateTimeRange"
-            });
-            cmbFilterMode.SelectedIndex = 0;
-            lblFilterIndex1.Text = "N1:";
-            txtFilterIndex1.Text = "300";
-            txtFilterIndex1.Size = new Size(70, 25);
-            txtFilterIndex1.ToolTipText = "First index or count value";
-            lblFilterIndex2.Text = "N2:";
-            txtFilterIndex2.Text = "2000";
-            txtFilterIndex2.Size = new Size(70, 25);
-            txtFilterIndex2.ToolTipText = "Second index value for range";
-            lblFilterDateTime1.Text = "Date1:";
-            ((DateTimePicker)dtpFilterHost1.Control).Format = DateTimePickerFormat.Short;
-            ((DateTimePicker)dtpFilterHost1.Control).Value = new DateTime(2025, 11, 12);
-            ((DateTimePicker)dtpFilterHost1.Control).Size = new Size(100, 25);
-            dtpFilterHost1.ToolTipText = "Start date for date filtering";
-            lblFilterDateTime2.Text = "Date2:";
-            ((DateTimePicker)dtpFilterHost2.Control).Format = DateTimePickerFormat.Short;
-            ((DateTimePicker)dtpFilterHost2.Control).Value = new DateTime(2025, 11, 12, 23, 59, 59);
-            ((DateTimePicker)dtpFilterHost2.Control).Size = new Size(100, 25);
-            dtpFilterHost2.ToolTipText = "End date for date filtering";
-            btnApplyFilter.Text = "Apply Filter";
-            btnApplyFilter.ToolTipText = "Apply the selected filter to data reading";
-            btnApplyFilter.BackColor = Color.LightGreen;
-            lblFilterStatus.Text = "Filter: All";
-            lblFilterStatus.Name = "lblFilterStatus";
-            
+            topPanel.ResumeLayout(false);
+            topPanel.PerformLayout();
+            dataFilterToolStrip.ResumeLayout(false);
+            dataFilterToolStrip.PerformLayout();
+            dataDisplayToolStrip.ResumeLayout(false);
+            dataDisplayToolStrip.PerformLayout();
+            chartControlsToolStrip.ResumeLayout(false);
+            chartControlsToolStrip.PerformLayout();
+            gridLayoutToolStrip.ResumeLayout(false);
+            gridLayoutToolStrip.PerformLayout();
             leftPanel.ResumeLayout(false);
             leftPanel.PerformLayout();
             ResumeLayout(false);
