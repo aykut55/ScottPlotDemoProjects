@@ -319,6 +319,7 @@
             leftTitleLabel = new Label();
             rightPanel = new Panel();
             centerPanel = new Panel();
+            tradingChart = new AlgoTradeWithScottPlot.Components.TradingChart();
             mainMenu.SuspendLayout();
             mainToolStrip.SuspendLayout();
             statusBar.SuspendLayout();
@@ -328,6 +329,7 @@
             chartControlsToolStrip.SuspendLayout();
             gridLayoutToolStrip.SuspendLayout();
             leftPanel.SuspendLayout();
+            centerPanel.SuspendLayout();
             SuspendLayout();
             // 
             // mainMenu
@@ -1308,11 +1310,21 @@
             // 
             centerPanel.BackColor = Color.White;
             centerPanel.BorderStyle = BorderStyle.FixedSingle;
+            centerPanel.Controls.Add(tradingChart);
             centerPanel.Dock = DockStyle.Fill;
             centerPanel.Location = new Point(238, 169);
             centerPanel.Name = "centerPanel";
             centerPanel.Size = new Size(615, 468);
             centerPanel.TabIndex = 4;
+            // 
+            // tradingChart
+            // 
+            tradingChart.BackColor = Color.White;
+            tradingChart.Dock = DockStyle.Fill;
+            tradingChart.Location = new Point(0, 0);
+            tradingChart.Name = "tradingChart";
+            tradingChart.Size = new Size(613, 466);
+            tradingChart.TabIndex = 0;
             // 
             // Form1
             // 
@@ -1348,10 +1360,13 @@
             gridLayoutToolStrip.PerformLayout();
             leftPanel.ResumeLayout(false);
             leftPanel.PerformLayout();
+            centerPanel.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
 
         #endregion
+
+        private Components.TradingChart tradingChart;
     }
 }

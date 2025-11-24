@@ -12,10 +12,8 @@ namespace AlgoTradeWithScottPlot.Components
             }
             base.Dispose(disposing);
         }
-
-        #region Component Designer generated code
-
-        #endregion
-
+        private ScottPlot.WinForms.FormsPlot formsPlot;
+        private HScrollBar hScrollBar1;
+        private VScrollBar vScrollBar;
     }
 }

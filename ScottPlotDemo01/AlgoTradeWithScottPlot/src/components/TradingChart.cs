@@ -85,10 +85,6 @@ namespace AlgoTradeWithScottPlot.Components
         // Designer controls
         private Panel panelCenter;
         private StatusStrip statusStrip1;
-        private TableLayoutPanel tableLayoutPanel1;
-        private FormsPlot formsPlot;
-        private VScrollBar vScrollBar1;
-        private HScrollBar hScrollBar1;
 
         public Panel TopPanel => panelTop;
         public Panel BottomPanel => panelBottom;
@@ -168,18 +164,16 @@ namespace AlgoTradeWithScottPlot.Components
             rightZoomInButton = new Button();
             rightZoomOutButton = new Button();
             panelCenter = new Panel();
-            statusStrip1 = new StatusStrip();
-            tableLayoutPanel1 = new TableLayoutPanel();
             formsPlot = new FormsPlot();
-            vScrollBar1 = new VScrollBar();
             hScrollBar1 = new HScrollBar();
+            vScrollBar = new VScrollBar();
+            statusStrip1 = new StatusStrip();
             panelTop.SuspendLayout();
             panelBottom.SuspendLayout();
             ((ISupportInitialize)zoomTrackBar).BeginInit();
             panelLeft.SuspendLayout();
             panelRight.SuspendLayout();
             panelCenter.SuspendLayout();
-            tableLayoutPanel1.SuspendLayout();
             SuspendLayout();
             // 
             // panelTop
@@ -389,7 +383,7 @@ namespace AlgoTradeWithScottPlot.Components
             panelLeft.Dock = DockStyle.Left;
             panelLeft.Location = new Point(0, 40);
             panelLeft.Name = "panelLeft";
-            panelLeft.Size = new Size(51, 520);
+            panelLeft.Size = new Size(60, 520);
             panelLeft.TabIndex = 1;
             // 
             // resetYButton
@@ -514,64 +508,50 @@ namespace AlgoTradeWithScottPlot.Components
             // 
             // panelCenter
             // 
-            panelCenter.BackColor = Color.LightGray;
-            panelCenter.Controls.Add(tableLayoutPanel1);
+            panelCenter.BackColor = Color.Transparent;
+            panelCenter.Controls.Add(formsPlot);
+            panelCenter.Controls.Add(hScrollBar1);
+            panelCenter.Controls.Add(vScrollBar);
             panelCenter.Controls.Add(statusStrip1);
             panelCenter.Dock = DockStyle.Fill;
-            panelCenter.Location = new Point(51, 40);
+            panelCenter.Location = new Point(60, 40);
             panelCenter.Name = "panelCenter";
-            panelCenter.Size = new Size(663, 520);
+            panelCenter.Size = new Size(654, 520);
             panelCenter.TabIndex = 5;
-            // 
-            // statusStrip1
-            // 
-            statusStrip1.Location = new Point(0, 498);
-            statusStrip1.Name = "statusStrip1";
-            statusStrip1.Size = new Size(663, 22);
-            statusStrip1.TabIndex = 2;
-            statusStrip1.Text = "statusStrip1";
-            // 
-            // tableLayoutPanel1
-            // 
-            tableLayoutPanel1.ColumnCount = 2;
-            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 97.41036F));
-            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 2.58964133F));
-            tableLayoutPanel1.Controls.Add(hScrollBar1, 0, 1);
-            tableLayoutPanel1.Controls.Add(vScrollBar1, 1, 0);
-            tableLayoutPanel1.Controls.Add(formsPlot, 0, 0);
-            tableLayoutPanel1.Dock = DockStyle.Fill;
-            tableLayoutPanel1.Location = new Point(0, 0);
-            tableLayoutPanel1.Name = "tableLayoutPanel1";
-            tableLayoutPanel1.RowCount = 2;
-            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 96.32353F));
-            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 3.67647052F));
-            tableLayoutPanel1.Size = new Size(663, 498);
-            tableLayoutPanel1.TabIndex = 6;
             // 
             // formsPlot
             // 
             formsPlot.DisplayScale = 1F;
             formsPlot.Dock = DockStyle.Fill;
-            formsPlot.Location = new Point(3, 3);
+            formsPlot.Location = new Point(0, 0);
             formsPlot.Name = "formsPlot";
-            formsPlot.Size = new Size(639, 473);
-            formsPlot.TabIndex = 2;
-            // 
-            // vScrollBar1
-            // 
-            vScrollBar1.Dock = DockStyle.Fill;
-            vScrollBar1.Location = new Point(645, 0);
-            vScrollBar1.Name = "vScrollBar1";
-            vScrollBar1.Size = new Size(18, 479);
-            vScrollBar1.TabIndex = 6;
+            formsPlot.Padding = new Padding(25);
+            formsPlot.Size = new Size(644, 481);
+            formsPlot.TabIndex = 5;
             // 
             // hScrollBar1
             // 
-            hScrollBar1.Dock = DockStyle.Fill;
-            hScrollBar1.Location = new Point(0, 479);
+            hScrollBar1.Dock = DockStyle.Bottom;
+            hScrollBar1.Location = new Point(0, 481);
             hScrollBar1.Name = "hScrollBar1";
-            hScrollBar1.Size = new Size(645, 19);
-            hScrollBar1.TabIndex = 8;
+            hScrollBar1.Size = new Size(644, 17);
+            hScrollBar1.TabIndex = 4;
+            // 
+            // vScrollBar
+            // 
+            vScrollBar.Dock = DockStyle.Right;
+            vScrollBar.Location = new Point(644, 0);
+            vScrollBar.Name = "vScrollBar";
+            vScrollBar.Size = new Size(10, 498);
+            vScrollBar.TabIndex = 3;
+            // 
+            // statusStrip1
+            // 
+            statusStrip1.Location = new Point(0, 498);
+            statusStrip1.Name = "statusStrip1";
+            statusStrip1.Size = new Size(654, 22);
+            statusStrip1.TabIndex = 2;
+            statusStrip1.Text = "statusStrip1";
             // 
             // TradingChart
             // 
@@ -591,7 +571,6 @@ namespace AlgoTradeWithScottPlot.Components
             panelRight.ResumeLayout(false);
             panelCenter.ResumeLayout(false);
             panelCenter.PerformLayout();
-            tableLayoutPanel1.ResumeLayout(false);
             ResumeLayout(false);
         }
 
