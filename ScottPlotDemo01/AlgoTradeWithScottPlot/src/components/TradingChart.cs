@@ -508,7 +508,8 @@ namespace AlgoTradeWithScottPlot.Components
             // 
             // panelCenter
             // 
-            panelCenter.BackColor = Color.Transparent;
+            panelCenter.AutoScroll = true;
+            panelCenter.BackColor = Color.LightSalmon;
             panelCenter.Controls.Add(formsPlot);
             panelCenter.Controls.Add(hScrollBar1);
             panelCenter.Controls.Add(vScrollBar);
@@ -521,6 +522,7 @@ namespace AlgoTradeWithScottPlot.Components
             // 
             // formsPlot
             // 
+            formsPlot.BackColor = Color.LightGray;
             formsPlot.DisplayScale = 1F;
             formsPlot.Dock = DockStyle.Fill;
             formsPlot.Location = new Point(0, 0);
@@ -536,6 +538,7 @@ namespace AlgoTradeWithScottPlot.Components
             hScrollBar1.Name = "hScrollBar1";
             hScrollBar1.Size = new Size(644, 17);
             hScrollBar1.TabIndex = 4;
+            hScrollBar1.Visible = false;
             // 
             // vScrollBar
             // 
@@ -544,6 +547,7 @@ namespace AlgoTradeWithScottPlot.Components
             vScrollBar.Name = "vScrollBar";
             vScrollBar.Size = new Size(10, 498);
             vScrollBar.TabIndex = 3;
+            vScrollBar.Visible = false;
             // 
             // statusStrip1
             // 

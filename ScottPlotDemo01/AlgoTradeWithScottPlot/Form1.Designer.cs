@@ -318,6 +318,7 @@
             btnCreateGrid = new Button();
             leftTitleLabel = new Label();
             rightPanel = new Panel();
+            button1980 = new Button();
             centerPanel = new Panel();
             tradingChart = new AlgoTradeWithScottPlot.Components.TradingChart();
             mainMenu.SuspendLayout();
@@ -329,6 +330,7 @@
             chartControlsToolStrip.SuspendLayout();
             gridLayoutToolStrip.SuspendLayout();
             leftPanel.SuspendLayout();
+            rightPanel.SuspendLayout();
             centerPanel.SuspendLayout();
             SuspendLayout();
             // 
@@ -1300,15 +1302,27 @@
             // 
             rightPanel.BackColor = Color.LightCoral;
             rightPanel.BorderStyle = BorderStyle.FixedSingle;
+            rightPanel.Controls.Add(button1980);
             rightPanel.Dock = DockStyle.Right;
             rightPanel.Location = new Point(853, 169);
             rightPanel.Name = "rightPanel";
             rightPanel.Size = new Size(120, 468);
             rightPanel.TabIndex = 0;
             // 
-            // centerPanel
+            // button1980
             // 
-            centerPanel.BackColor = Color.White;
+            button1980.Location = new Point(22, 18);
+            button1980.Name = "button1980";
+            button1980.Size = new Size(75, 23);
+            button1980.TabIndex = 0;
+            button1980.Text = "3 Plot";
+            button1980.UseVisualStyleBackColor = true;
+            button1980.Click += button1980_Click;
+            // 
+            // centerPanel
+            //
+            centerPanel.AutoScroll = true;
+            centerPanel.BackColor = Color.FromArgb(45, 45, 48);
             centerPanel.BorderStyle = BorderStyle.FixedSingle;
             centerPanel.Controls.Add(tradingChart);
             centerPanel.Dock = DockStyle.Fill;
@@ -1318,8 +1332,8 @@
             centerPanel.TabIndex = 4;
             // 
             // tradingChart
-            // 
-            tradingChart.BackColor = Color.White;
+            //
+            tradingChart.BackColor = Color.FromArgb(45, 45, 48);
             tradingChart.Dock = DockStyle.Fill;
             tradingChart.Location = new Point(0, 0);
             tradingChart.Name = "tradingChart";
@@ -1360,6 +1374,7 @@
             gridLayoutToolStrip.PerformLayout();
             leftPanel.ResumeLayout(false);
             leftPanel.PerformLayout();
+            rightPanel.ResumeLayout(false);
             centerPanel.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
@@ -1368,5 +1383,6 @@
         #endregion
 
         private Components.TradingChart tradingChart;
+        private Button button1980;
     }
 }
