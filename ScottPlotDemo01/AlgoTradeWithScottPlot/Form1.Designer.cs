@@ -1318,11 +1318,10 @@
             button1980.Text = "3 Plot";
             button1980.UseVisualStyleBackColor = true;
             button1980.Click += button1980_Click;
-            // 
+            //
             // centerPanel
             //
             centerPanel.AutoScroll = true;
-            centerPanel.BackColor = Color.FromArgb(45, 45, 48);
             centerPanel.BorderStyle = BorderStyle.FixedSingle;
             centerPanel.Controls.Add(tradingChart);
             centerPanel.Dock = DockStyle.Fill;
@@ -1330,10 +1329,9 @@
             centerPanel.Name = "centerPanel";
             centerPanel.Size = new Size(615, 468);
             centerPanel.TabIndex = 4;
-            // 
+            //
             // tradingChart
             //
-            tradingChart.BackColor = Color.FromArgb(45, 45, 48);
             tradingChart.Dock = DockStyle.Fill;
             tradingChart.Location = new Point(0, 0);
             tradingChart.Name = "tradingChart";

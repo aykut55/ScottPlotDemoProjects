@@ -71,9 +71,9 @@ namespace AlgoTradeWithScottPlot
                 var formsPlot = tradingChart.Plot;
 
                 // TradingChart'ın çevre panellerini gizle (multiplot için)
-                tradingChart.TopPanel.Visible = false;
+                tradingChart.TopPanel.Visible = true;
                 tradingChart.BottomPanel.Visible = false;
-                tradingChart.LeftPanel.Visible = false;
+                tradingChart.LeftPanel.Visible = true;
                 tradingChart.RightPanel.Visible = false;
 
                 // TradingChart'ın tüm kontrollerini gez ve statusStrip'i bul ve gizle
@@ -92,7 +92,7 @@ namespace AlgoTradeWithScottPlot
                 }
 
                 // TradingChart'ın arka plan rengini ayarla (beyaz alan kalmaması için)
-                tradingChart.BackColor = System.Drawing.Color.FromArgb(45, 45, 48); // Koyu gri
+                //tradingChart.BackColor = System.Drawing.Color.FromArgb(45, 45, 48); // Koyu gri
 
                 // Multiplot'u temizle (eğer önceden oluşturulmuşsa)
                 formsPlot.Reset();
@@ -123,9 +123,36 @@ namespace AlgoTradeWithScottPlot
                 formsPlot.Height = totalHeight; // Toplam yükseklik = 3600px
                 formsPlot.Location = new Point(0, 0);
 
-                // Genişliği parent panel'e göre ayarla
-                // İlk ayar için tradingChart genişliğini kullan
-                formsPlot.Width = tradingChart.ClientSize.Width - SystemInformation.VerticalScrollBarWidth;
+                // Genişliği parent panel'e göre ayarla (panelCenter'ın gerçek genişliği)
+                // Reflection ile panelCenter'ı al
+                var panelCenterProp = tradingChart.GetType().GetProperty("panelCenter",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                Panel? panelCenterObj = panelCenterProp?.GetValue(tradingChart) as Panel;
+
+                if (panelCenterObj != null)
+                {
+                    // panelCenter'ın gerçek kullanılabilir alanını kullan
+                    int adjustedWidth = panelCenterObj.ClientSize.Width;
+
+                    // LeftPanel visible ise ekstra düzeltme yap
+                    if (tradingChart.LeftPanel.Visible)
+                    {
+                        adjustedWidth -= (tradingChart.LeftPanel.Width - 1); // LeftPanel width + tolerans
+                    }
+
+                    // TopPanel visible ise ekstra düzeltme
+                    if (tradingChart.TopPanel.Visible)
+                    {
+                        adjustedWidth -= 5; // Küçük tolerans
+                    }
+
+                    formsPlot.Width = adjustedWidth;
+                }
+                else
+                {
+                    // Fallback: tradingChart kullan
+                    formsPlot.Width = tradingChart.ClientSize.Width - SystemInformation.VerticalScrollBarWidth - 20;
+                }
 
                 // TradingChart resize event'i ekle - form büyüdüğünde FormsPlot genişliğini güncelle
                 tradingChart.Resize += (s, ev) =>
@@ -135,7 +162,28 @@ namespace AlgoTradeWithScottPlot
                     {
                         if (formsPlot.Dock == DockStyle.None && formsPlot.Height > 1000) // Multiplot modunda
                         {
-                            formsPlot.Width = tradingChart.ClientSize.Width - SystemInformation.VerticalScrollBarWidth;
+                            if (panelCenterObj != null)
+                            {
+                                int resizedWidth = panelCenterObj.ClientSize.Width;
+
+                                // LeftPanel visible ise ekstra düzeltme yap
+                                if (tradingChart.LeftPanel.Visible)
+                                {
+                                    resizedWidth -= tradingChart.LeftPanel.Width + 5;
+                                }
+
+                                // TopPanel visible ise ekstra düzeltme
+                                if (tradingChart.TopPanel.Visible)
+                                {
+                                    resizedWidth -= 5;
+                                }
+
+                                formsPlot.Width = resizedWidth;
+                            }
+                            else
+                            {
+                                formsPlot.Width = tradingChart.ClientSize.Width - SystemInformation.VerticalScrollBarWidth - 20;
+                            }
                         }
                     }
                     catch { /* Ignore resize errors */ }

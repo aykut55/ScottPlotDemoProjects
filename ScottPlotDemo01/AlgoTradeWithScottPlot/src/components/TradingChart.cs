@@ -509,7 +509,7 @@ namespace AlgoTradeWithScottPlot.Components
             // panelCenter
             // 
             panelCenter.AutoScroll = true;
-            panelCenter.BackColor = Color.LightSalmon;
+            panelCenter.BackColor = Color.Transparent;
             panelCenter.Controls.Add(formsPlot);
             panelCenter.Controls.Add(hScrollBar1);
             panelCenter.Controls.Add(vScrollBar);
@@ -522,7 +522,7 @@ namespace AlgoTradeWithScottPlot.Components
             // 
             // formsPlot
             // 
-            formsPlot.BackColor = Color.LightGray;
+            formsPlot.BackColor = Color.Transparent;
             formsPlot.DisplayScale = 1F;
             formsPlot.Dock = DockStyle.Fill;
             formsPlot.Location = new Point(0, 0);
