@@ -982,5 +982,68 @@ namespace AlgoTradeWithScottPlot
             var multiplotForm = new MultiplotDraggableForm();
             multiplotForm.Show();
         }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            // Generate 2M OHLC points
+            int pointCount = 2_000_000;
+
+            statusLabel.Text = $"Generating {pointCount:N0} OHLC bars...";
+            Application.DoEvents(); // UI güncellenmesi için
+
+            var ohlcData = DataGenerator.GenerateOHLCs(pointCount);
+
+            statusLabel.Text = $"Generated {ohlcData.Length:N0} OHLC bars | Calculating indicators...";
+            Application.DoEvents();
+
+            // Open, Close, High, Low fiyatlarını al
+            var openPrices = ohlcData.Select(x => x.Open).ToArray();
+            var closePrices = ohlcData.Select(x => x.Close).ToArray();
+            var highPrices = ohlcData.Select(x => x.High).ToArray();
+            var lowPrices = ohlcData.Select(x => x.Low).ToArray();
+
+            // Volume üret
+            var volumes = DataGenerator.GenerateVolume(pointCount, 1000000, 10000000);
+
+            // SMA hesapla
+            var sma100 = DataGenerator.CalculateSMA(closePrices, 100);
+            var sma200 = DataGenerator.CalculateSMA(closePrices, 200);
+
+            // RSI hesapla
+            var rsi = DataGenerator.CalculateRSI(closePrices, 14);
+
+            // MACD hesapla
+            var (macdLine, signalLine, histogram) = DataGenerator.CalculateMACD(closePrices, 12, 26, 9);
+
+            // Stochastic hesapla
+            var (stochK, stochD) = DataGenerator.CalculateStochastic(highPrices, lowPrices, closePrices, 14, 3, 3);
+
+            statusLabel.Text = $"Calculating trading signals...";
+            Application.DoEvents();
+
+            // Trading sinyalleri üret (SMA100 ve SMA200 kesişimlerinden, %5 kar al, %3 zarar kes)
+            var (signals, entryPrices, exitPrices) = DataGenerator.CalculateTradingSignals(sma100, sma200, 5, -3);
+
+            // PnL hesapla (3 ayrı değer: Anlık, Gerçekleşen, Kümülatif)
+            var (unrealizedPnL, realizedPnL, cumulativePnL) = DataGenerator.CalculatePnL(signals, entryPrices, exitPrices, closePrices);
+
+            // Balance hesapla (Başlangıç sermayesi: 100,000) - Kümülatif PnL kullan
+            var balance = DataGenerator.CalculateBalance(100000, cumulativePnL);
+
+            // Sonuçları göster
+            int buySignals = signals.Count(s => s == 1);
+            int sellSignals = signals.Count(s => s == -1);
+            int flatSignals = 0;
+            double finalBalance = balance[balance.Length - 1];
+            double totalPnL = cumulativePnL[cumulativePnL.Length - 1];
+            double lastTradeRealizedPnL = realizedPnL[realizedPnL.Length - 1];
+            double currentUnrealizedPnL = unrealizedPnL[unrealizedPnL.Length - 1];
+            double returnPercent = (totalPnL / 100000) * 100;
+
+            statusLabel.Text = $"Completed! Bars: {ohlcData.Length:N0} | Signals: {buySignals} buy, {sellSignals} sell, {flatSignals} flat | " +
+                              $"Initial: $100,000 | Final: ${finalBalance:N2} | " +
+                              $"Total PnL: ${totalPnL:N2} ({returnPercent:F2}%) | " +
+                              $"Last Trade: ${lastTradeRealizedPnL:N2} | Open Position: ${currentUnrealizedPnL:N2}";
+        }
     }
 }
