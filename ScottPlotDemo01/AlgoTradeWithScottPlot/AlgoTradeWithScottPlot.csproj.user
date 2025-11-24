@@ -4,6 +4,9 @@
     <Compile Update="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Update="MultiplotDraggableForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="src\components\TradingChart.cs">
       <SubType>UserControl</SubType>
     </Compile>

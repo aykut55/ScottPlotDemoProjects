@@ -321,6 +321,7 @@
             button1980 = new Button();
             centerPanel = new Panel();
             tradingChart = new AlgoTradeWithScottPlot.Components.TradingChart();
+            button1979 = new Button();
             mainMenu.SuspendLayout();
             mainToolStrip.SuspendLayout();
             statusBar.SuspendLayout();
@@ -1302,6 +1303,7 @@
             // 
             rightPanel.BackColor = Color.LightCoral;
             rightPanel.BorderStyle = BorderStyle.FixedSingle;
+            rightPanel.Controls.Add(button1979);
             rightPanel.Controls.Add(button1980);
             rightPanel.Dock = DockStyle.Right;
             rightPanel.Location = new Point(853, 169);
@@ -1311,16 +1313,16 @@
             // 
             // button1980
             // 
-            button1980.Location = new Point(22, 18);
+            button1980.Location = new Point(19, 54);
             button1980.Name = "button1980";
             button1980.Size = new Size(75, 23);
             button1980.TabIndex = 0;
             button1980.Text = "3 Plot";
             button1980.UseVisualStyleBackColor = true;
             button1980.Click += button1980_Click;
-            //
+            // 
             // centerPanel
-            //
+            // 
             centerPanel.AutoScroll = true;
             centerPanel.BorderStyle = BorderStyle.FixedSingle;
             centerPanel.Controls.Add(tradingChart);
@@ -1329,14 +1331,25 @@
             centerPanel.Name = "centerPanel";
             centerPanel.Size = new Size(615, 468);
             centerPanel.TabIndex = 4;
-            //
+            // 
             // tradingChart
-            //
+            // 
+            tradingChart.BackColor = Color.White;
             tradingChart.Dock = DockStyle.Fill;
             tradingChart.Location = new Point(0, 0);
             tradingChart.Name = "tradingChart";
             tradingChart.Size = new Size(613, 466);
             tradingChart.TabIndex = 0;
+            // 
+            // button1979
+            // 
+            button1979.Location = new Point(19, 25);
+            button1979.Name = "button1979";
+            button1979.Size = new Size(75, 23);
+            button1979.TabIndex = 1;
+            button1979.Text = "button1";
+            button1979.UseVisualStyleBackColor = true;
+            button1979.Click += button1979_Click;
             // 
             // Form1
             // 
@@ -1382,5 +1395,6 @@
 
         private Components.TradingChart tradingChart;
         private Button button1980;
+        private Button button1979;
     }
 }
