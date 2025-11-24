@@ -60,6 +60,8 @@ namespace AlgoTradeWithScottPlot
         private void button3_Click(object sender, EventArgs e) { } // Calculate MA
         private void button4_Click(object sender, EventArgs e) { } // Calculate RSI
 
+        private bool showMessage = false; // Set to false to disable message boxes
+
         // Button1980 Event - Multiplot Demo (3 subplots)
         private void button1980_Click(object sender, EventArgs e)
         {
@@ -164,6 +166,9 @@ namespace AlgoTradeWithScottPlot
 
                 // Candlestick plot ekle
                 var candlePlot = plot0.Add.Candlestick(ohlcData);
+
+                // Sequential positions kullan (DateTime yerine index)
+                candlePlot.Sequential = true;
                 // ScottPlot 5'te renk ayarları (API'ye göre değişebilir)
                 // candlePlot.ColorUp = ScottPlot.Colors.LimeGreen;
                 // candlePlot.ColorDown = ScottPlot.Colors.Red;
@@ -610,6 +615,73 @@ namespace AlgoTradeWithScottPlot
                 plot8.ShowLegend();
 
                 // ===========================================
+                // X Eksenini Paylaş (Zoom/Pan Sync)
+                // ===========================================
+                // SharedAxes'den ÖNCE her plot'un axis limitlerini ayarla
+                plot0.Axes.AutoScale();
+                plot1.Axes.AutoScale();
+                plot2.Axes.AutoScale();
+                plot3.Axes.AutoScale();
+                plot4.Axes.AutoScale();
+                plot5.Axes.AutoScale();
+                plot6.Axes.AutoScale();
+                plot7.Axes.AutoScale();
+                plot8.Axes.AutoScale();
+
+                // Şimdi X eksenini paylaş
+                formsPlot.Multiplot.SharedAxes.ShareX(new[] { plot0, plot1, plot2, plot3, plot4, plot5, plot6, plot7, plot8 });
+
+                // X ekseni limitleri ayarla (0-100 bar)
+                foreach (var plot in new[] { plot0, plot1, plot2, plot3, plot4, plot5, plot6, plot7, plot8 })
+                {
+                    plot.Axes.SetLimitsX(0, 100);
+                    plot.Axes.AutoScaleY(); // Y eksenini otomatik ayarla
+                }
+
+                // Grid ayarları - tüm plotlar son plotun (plot8) X eksenini kullanır
+                plot0.Grid.XAxis = plot8.Axes.Bottom;
+                plot1.Grid.XAxis = plot8.Axes.Bottom;
+                plot2.Grid.XAxis = plot8.Axes.Bottom;
+                plot3.Grid.XAxis = plot8.Axes.Bottom;
+                plot4.Grid.XAxis = plot8.Axes.Bottom;
+                plot5.Grid.XAxis = plot8.Axes.Bottom;
+                plot6.Grid.XAxis = plot8.Axes.Bottom;
+                plot7.Grid.XAxis = plot8.Axes.Bottom;
+
+                // Her plotun grid'i kendi Right axis'ini kullanır
+                plot0.Grid.YAxis = plot0.Axes.Right;
+                plot1.Grid.YAxis = plot1.Axes.Right;
+                plot2.Grid.YAxis = plot2.Axes.Right;
+                plot3.Grid.YAxis = plot3.Axes.Right;
+                plot4.Grid.YAxis = plot4.Axes.Right;
+                plot5.Grid.YAxis = plot5.Axes.Right;
+                plot6.Grid.YAxis = plot6.Axes.Right;
+                plot7.Grid.YAxis = plot7.Axes.Right;
+                plot8.Grid.YAxis = plot8.Axes.Right;
+
+                // ===========================================
+                // Mouse Scroll Event Handler
+                // ===========================================
+                // FormsPlot üzerinde mouse scroll → Zoom in/out
+                // ScrollBar üzerinde mouse scroll → Plotlar arasında hareket
+
+                bool isMouseOverPlot = false;
+
+                formsPlot.MouseEnter += (s, e) => isMouseOverPlot = true;
+                formsPlot.MouseLeave += (s, e) => isMouseOverPlot = false;
+
+                // Mouse scroll event'i - parent scroll'u engelle
+                formsPlot.MouseWheel += (s, e) =>
+                {
+                    if (isMouseOverPlot)
+                    {
+                        // Plot üzerinde → Zoom yapılacak (ScottPlot default behavior)
+                        // Parent panelin scroll yapmasını engelle
+                        ((HandledMouseEventArgs)e).Handled = true;
+                    }
+                };
+
+                // ===========================================
                 // Tüm plotları refresh et
                 // ===========================================
                 formsPlot.Refresh();
@@ -630,28 +702,46 @@ namespace AlgoTradeWithScottPlot
                     {
                         panelCenterInner.AutoScroll = true;
                         panelCenterInner.BackColor = System.Drawing.Color.FromArgb(45, 45, 48); // Koyu gri - beyaz alan kalmaması için
+
+                        // Panel üzerinde mouse scroll → Dikey scroll (plotlar arasında hareket)
+                        panelCenterInner.MouseWheel += (s, e) =>
+                        {
+                            // Mouse FormsPlot üzerinde değilse, panel scroll yapsın
+                            if (!formsPlot.ClientRectangle.Contains(formsPlot.PointToClient(System.Windows.Forms.Cursor.Position)))
+                            {
+                                // Panel scroll (default behavior)
+                                // e.Handled zaten false olduğu için otomatik scroll yapılacak
+                            }
+                        };
                     }
                 }
 
-                MessageBox.Show(
-                    "9 subplot başarıyla oluşturuldu!\n\n" +
-                    $"Toplam Yükseklik: {totalHeight}px (3600px)\n\n" +
-                    "Plot 0: Price (Candlestick) - 400px\n" +
-                    "Plot 1: Volume - 400px\n" +
-                    "Plot 2: Moving Averages (SMA 20 & 50) - 400px\n" +
-                    "Plot 3: RSI Indicator - 400px\n" +
-                    "Plot 4: MACD - 400px\n" +
-                    "Plot 5: Stochastic Oscillator - 400px\n" +
-                    "Plot 6: Trading Signals (Buy/Sell) - 400px\n" +
-                    "Plot 7: Profit & Loss (PnL) - 400px\n" +
-                    "Plot 8: Account Balance - 400px\n\n" +
-                    "(Tüm plotlar eşit yükseklikte)\n" +
-                    "Dikey scroll ile grafikler arasında gezinebilirsiniz.\n" +
-                    "Form resize edildiğinde grafik genişliği otomatik ayarlanır.",
-                    "Multiplot Demo - Full Trading Dashboard",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information
-                );
+                if (showMessage)
+                {
+                    MessageBox.Show(
+                        "9 subplot başarıyla oluşturuldu!\n\n" +
+                        $"Toplam Yükseklik: {totalHeight}px (3600px)\n\n" +
+                        "Plot 0: Price (Candlestick) - 400px\n" +
+                        "Plot 1: Volume - 400px\n" +
+                        "Plot 2: Moving Averages (SMA 20 & 50) - 400px\n" +
+                        "Plot 3: RSI Indicator - 400px\n" +
+                        "Plot 4: MACD - 400px\n" +
+                        "Plot 5: Stochastic Oscillator - 400px\n" +
+                        "Plot 6: Trading Signals (Buy/Sell) - 400px\n" +
+                        "Plot 7: Profit & Loss (PnL) - 400px\n" +
+                        "Plot 8: Account Balance - 400px\n\n" +
+                        "✅ Özellikler:\n" +
+                        "• X ekseni senkronize (tüm plotlar birlikte zoom/pan)\n" +
+                        "• Plot üzerinde mouse scroll → Zoom in/out\n" +
+                        "• ScrollBar üzerinde mouse scroll → Plotlar arası hareket\n" +
+                        "• Form resize → Otomatik genişlik ayarı\n" +
+                        "• Dikey scroll bar ile gezinme",
+                        "Multiplot Demo - Full Trading Dashboard",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information
+                    );
+                }
+
             }
             catch (Exception ex)
             {
