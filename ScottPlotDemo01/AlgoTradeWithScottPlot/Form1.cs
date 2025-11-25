@@ -1122,7 +1122,6 @@ namespace AlgoTradeWithScottPlot
             plot1.YLabel("Volume");
             plot1.Axes.AutoScale();
 
-
             // ===========================================
             // PLOT 2: Moving Averages
             // ===========================================
@@ -1152,306 +1151,505 @@ namespace AlgoTradeWithScottPlot
             plot2.Axes.AutoScale();
             plot2.ShowLegend();
 
+            // ===========================================
+            // PLOT 3: RSI (Relative Strength Index)
+            // ===========================================
+            var plot3 = plotManager.AddPlot();
+            plotManager.SetPlotId(plot3, 3);
+            // RSI çizgisini PlotManager ile ekle
+            var rsiLine = plotManager.AddPlotData(plot3, PlotType.Line, rsi, 0);
 
-            /*
+            // RSI referans çizgilerini PlotManager ile ekle
+            var hline30 = plotManager.AddPlotData(plot3, PlotType.HorizontalLine, 30.0, 1);
+            var hline70 = plotManager.AddPlotData(plot3, PlotType.HorizontalLine, 70.0, 2);
 
-                                    // ===========================================
-                                    // PLOT 3: RSI (Relative Strength Index)
-                                    // ===========================================
-                                    var plot3 = plotManager.AddPlot();
+            // RSI çizgisi özelliklerini ayarla
+            if (rsiLine is Signal rsiSignal)
+            {
+                rsiSignal.Color = ScottPlot.Colors.Blue;
+                rsiSignal.LineWidth = 2;
+                rsiSignal.LegendText = "RSI";
+            }
 
-                                    // RSI çizgisini PlotManager ile ekle
-                                    var rsiLine = plotManager.AddPlotData(plot3, PlotType.Line, rsi, 0);
+            // Referans çizgileri özelliklerini ayarla
+            if (hline30 is HorizontalLine h30)
+            {
+                h30.LineColor = ScottPlot.Colors.Red;
+                h30.LineWidth = 1;
+                h30.LinePattern = ScottPlot.LinePattern.Dashed;
+            }
 
-                                    // RSI referans çizgilerini PlotManager ile ekle
-                                    var hline30 = plotManager.AddPlotData(plot3, PlotType.HorizontalLine, 30.0, 1);
-                                    var hline70 = plotManager.AddPlotData(plot3, PlotType.HorizontalLine, 70.0, 2);
+            if (hline70 is HorizontalLine h70)
+            {
+                h70.LineColor = ScottPlot.Colors.Red;
+                h70.LineWidth = 1;
+                h70.LinePattern = ScottPlot.LinePattern.Dashed;
+            }
 
-                                    // RSI çizgisi özelliklerini ayarla
-                                    if (rsiLine is Signal rsiSignal)
-                                    {
-                                        rsiSignal.Color = ScottPlot.Colors.Blue;
-                                        rsiSignal.LineWidth = 2;
-                                        rsiSignal.LegendText = "RSI";
-                                    }
-
-                                    // Referans çizgileri özelliklerini ayarla
-                                    if (hline30 is HorizontalLine h30)
-                                    {
-                                        h30.LineColor = ScottPlot.Colors.Red;
-                                        h30.LineWidth = 1;
-                                        h30.LinePattern = ScottPlot.LinePattern.Dashed;
-                                    }
-
-                                    if (hline70 is HorizontalLine h70)
-                                    {
-                                        h70.LineColor = ScottPlot.Colors.Red;
-                                        h70.LineWidth = 1;
-                                        h70.LinePattern = ScottPlot.LinePattern.Dashed;
-                                    }
-
-                                    // Plot 3 ayarları
-                                    plot3.Title("RSI Indicator");
-                                    plot3.YLabel("RSI");
-                                    plot3.Axes.SetLimitsY(0, 100);
-                                    plot3.Axes.AutoScaleX();
-                                    plot3.ShowLegend();
+            // Plot 3 ayarları
+            plot3.Title("RSI Indicator");
+            plot3.YLabel("RSI");
+            plot3.Axes.SetLimitsY(0, 100);
+            plot3.Axes.AutoScaleX();
+            plot3.ShowLegend();
 
 
-                                    // ===========================================
-                                    // PLOT 4: MACD (Moving Average Convergence Divergence)
-                                    // ===========================================
-                                    var plot4 = plotManager.AddPlot();
+            // ===========================================
+            // PLOT 4: MACD (Moving Average Convergence Divergence)
+            // ===========================================
+            var plot4 = plotManager.AddPlot();
+            plotManager.SetPlotId(plot4, 4);
 
-                                    // PlotManager ile MACD verilerini ekle
-                                    var _macdLine = plotManager.AddPlotData(plot4, PlotType.Line, macdLine, 0);
-                                    var _signalLine = plotManager.AddPlotData(plot4, PlotType.Line, signalLine, 1);
-                                    var _histogram = plotManager.AddPlotData(plot4, PlotType.Bar, histogram, 2);
-                                    var zeroLine = plotManager.AddPlotData(plot4, PlotType.HorizontalLine, 0.0, 3);
+            // PlotManager ile MACD verilerini ekle
+            var _macdLine = plotManager.AddPlotData(plot4, PlotType.Line, macdLine, 0);
+            var _signalLine = plotManager.AddPlotData(plot4, PlotType.Line, signalLine, 1);
+            var _histogram = plotManager.AddPlotData(plot4, PlotType.Bar, histogram, 2);
+            var zeroLine = plotManager.AddPlotData(plot4, PlotType.HorizontalLine, 0.0, 3);
 
-                                    // MACD line özelliklerini ayarla
-                                    if (_macdLine is Signal macdSignal)
-                                    {
-                                        macdSignal.Color = ScottPlot.Colors.Blue;
-                                        macdSignal.LineWidth = 2;
-                                        macdSignal.LegendText = "MACD";
-                                    }
+            // MACD line özelliklerini ayarla
+            if (_macdLine is Signal macdSignal)
+            {
+                macdSignal.Color = ScottPlot.Colors.Blue;
+                macdSignal.LineWidth = 2;
+                macdSignal.LegendText = "MACD";
+            }
 
-                                    // Signal line özelliklerini ayarla
-                                    if (_signalLine is Signal signalSignal)
-                                    {
-                                        signalSignal.Color = ScottPlot.Colors.Red;
-                                        signalSignal.LineWidth = 2;
-                                        signalSignal.LegendText = "Signal";
-                                    }
+            // Signal line özelliklerini ayarla
+            if (_signalLine is Signal signalSignal)
+            {
+                signalSignal.Color = ScottPlot.Colors.Red;
+                signalSignal.LineWidth = 2;
+                signalSignal.LegendText = "Signal";
+            }
 
-                                    // Histogram özelliklerini ayarla
-                                    if (_histogram is BarPlot histogramBars)
-                                    {
-                                        for (int i = 0; i < histogramBars.Bars.Count; i++)
-                                        {
-                                            histogramBars.Bars[i].FillColor = histogram[i] >= 0
-                                                ? ScottPlot.Colors.Green.WithAlpha(0.5)
-                                                : ScottPlot.Colors.Red.WithAlpha(0.5);
-                                        }
-                                    }
+            // Histogram özelliklerini ayarla
+            if (_histogram is BarPlot histogramBars)
+            {
+                for (int i = 0; i < histogramBars.Bars.Count; i++)
+                {
+                    histogramBars.Bars[i].FillColor = histogram[i] >= 0
+                        ? ScottPlot.Colors.Green.WithAlpha(0.5)
+                        : ScottPlot.Colors.Red.WithAlpha(0.5);
+                }
+            }
 
-                                    // Zero line özelliklerini ayarla
-                                    if (zeroLine is HorizontalLine zLine)
-                                    {
-                                        zLine.LineColor = ScottPlot.Colors.Gray;
-                                        zLine.LineWidth = 1;
-                                        zLine.LinePattern = ScottPlot.LinePattern.Dashed;
-                                    }
+            // Zero line özelliklerini ayarla
+            if (zeroLine is HorizontalLine zLine)
+            {
+                zLine.LineColor = ScottPlot.Colors.Gray;
+                zLine.LineWidth = 1;
+                zLine.LinePattern = ScottPlot.LinePattern.Dashed;
+            }
 
-                                    // Plot 4 ayarları
-                                    plot4.Title("MACD");
-                                    plot4.YLabel("MACD");
-                                    plot4.Axes.AutoScale();
-                                    plot4.ShowLegend();
-
-
-                                    // ===========================================
-                                    // PLOT 5: Stochastic Oscillator
-                                    // ===========================================
-                                    var plot5 = plotManager.AddPlot();
-
-                                    // PlotManager ile Stochastic verilerini ekle
-                                    var kLine = plotManager.AddPlotData(plot5, PlotType.Line, stochK, 0);
-                                    var dLine = plotManager.AddPlotData(plot5, PlotType.Line, stochD, 1);
-                                    var stochLine80 = plotManager.AddPlotData(plot5, PlotType.HorizontalLine, 80.0, 2);
-                                    var stochLine20 = plotManager.AddPlotData(plot5, PlotType.HorizontalLine, 20.0, 3);
-
-                                    // %K line özelliklerini ayarla
-                                    if (kLine is Signal kSignal)
-                                    {
-                                        kSignal.Color = ScottPlot.Colors.Blue;
-                                        kSignal.LineWidth = 2;
-                                        kSignal.LegendText = "%K";
-                                    }
-
-                                    // %D line özelliklerini ayarla
-                                    if (dLine is Signal dSignal)
-                                    {
-                                        dSignal.Color = ScottPlot.Colors.Red;
-                                        dSignal.LineWidth = 2;
-                                        dSignal.LegendText = "%D";
-                                    }
-
-                                    // Overbought line (80) özelliklerini ayarla
-                                    if (stochLine80 is HorizontalLine line80)
-                                    {
-                                        line80.LineColor = ScottPlot.Colors.Red;
-                                        line80.LineWidth = 1;
-                                        line80.LinePattern = ScottPlot.LinePattern.Dashed;
-                                    }
-
-                                    // Oversold line (20) özelliklerini ayarla
-                                    if (stochLine20 is HorizontalLine line20)
-                                    {
-                                        line20.LineColor = ScottPlot.Colors.Red;
-                                        line20.LineWidth = 1;
-                                        line20.LinePattern = ScottPlot.LinePattern.Dashed;
-                                    }
-
-                                    // Plot 5 ayarları
-                                    plot5.Title("Stochastic Oscillator");
-                                    plot5.YLabel("Stochastic");
-                                    plot5.Axes.SetLimitsY(0, 100);
-                                    plot5.Axes.AutoScaleX();
-                                    plot5.ShowLegend();
-
-                                    // ===========================================
-                                    // PLOT 6: Trading Signals (Buy/Sell)
-                                    // ===========================================
-                                    var plot6 = plotManager.AddPlot();
-
-                                    // Buy ve sell signal verilerini hazırla
-                                    List<double> buySignalX = new List<double>();
-                                    List<double> buySignalY = new List<double>();
-                                    List<double> sellSignalX = new List<double>();
-                                    List<double> sellSignalY = new List<double>();
-
-                                    for (int i = 0; i < signals.Length; i++)
-                                    {
-                                        if (signals[i] == 1) // Buy signal
-                                        {
-                                            buySignalX.Add(i);
-                                            buySignalY.Add(1); // Signal = 1 (Buy)
-                                        }
-                                        else if (signals[i] == -1) // Sell signal
-                                        {
-                                            sellSignalX.Add(i);
-                                            sellSignalY.Add(-1); // Signal = -1 (Sell)
-                                        }
-                                    }
-
-                                    // Trading signals PlotManager ile ekle
-                                    var buyScatter = buySignalX.Count > 0 ? plotManager.AddPlotData(plot6, PlotType.Scatter, (buySignalX.ToArray(), buySignalY.ToArray()), 0) : null;
-                                    var sellScatter = sellSignalX.Count > 0 ? plotManager.AddPlotData(plot6, PlotType.Scatter, (sellSignalX.ToArray(), sellSignalY.ToArray()), 1) : null;
-
-                                    // Zero line PlotManager ile ekle
-                                    var signalZeroLine = plotManager.AddPlotData(plot6, PlotType.HorizontalLine, 0.0, 2);
-
-                                    // Buy signals özelliklerini ayarla
-                                    if (buyScatter is ScottPlot.Plottables.Scatter buyScatterPlot)
-                                    {
-                                        buyScatterPlot.Color = ScottPlot.Colors.Green;
-                                        buyScatterPlot.MarkerSize = 10;
-                                        buyScatterPlot.MarkerShape = ScottPlot.MarkerShape.FilledTriangleUp;
-                                        buyScatterPlot.LegendText = "Buy";
-                                    }
-
-                                    // Sell signals özelliklerini ayarla
-                                    if (sellScatter is ScottPlot.Plottables.Scatter sellScatterPlot)
-                                    {
-                                        sellScatterPlot.Color = ScottPlot.Colors.Red;
-                                        sellScatterPlot.MarkerSize = 10;
-                                        sellScatterPlot.MarkerShape = ScottPlot.MarkerShape.FilledTriangleDown;
-                                        sellScatterPlot.LegendText = "Sell";
-                                    }
-
-                                    // Zero line özelliklerini ayarla
-                                    if (signalZeroLine is HorizontalLine signalZLine)
-                                    {
-                                        signalZLine.LineColor = ScottPlot.Colors.Gray;
-                                        signalZLine.LineWidth = 1;
-                                        signalZLine.LinePattern = ScottPlot.LinePattern.Dashed;
-                                    }
-
-                                    // Plot 6 ayarları
-                                    plot6.Title("Trading Signals");
-                                    plot6.YLabel("Signal");
-                                    plot6.Axes.SetLimitsY(-1.5, 1.5);
-                                    plot6.Axes.AutoScaleX();
-                                    plot6.ShowLegend();
-
-                                    // ===========================================
-                                    // PLOT 7: PnL (Profit and Loss)
-                                    // ===========================================
-                                    var plot7 = plotManager.AddPlot();
-
-                                    // PnL çizgisini PlotManager ile ekle
-                                    var pnlLine = plotManager.AddPlotData(plot7, PlotType.Line, cumulativePnL, 0);  //unrealizedPnL, realizedPnL, cumulativePnL
-
-                                    // Zero line PlotManager ile ekle
-                                    var pnlZeroLine = plotManager.AddPlotData(plot7, PlotType.HorizontalLine, 0.0, 1);
-
-                                    // PnL çizgisi özelliklerini ayarla
-                                    if (pnlLine is Signal pnlSignal)
-                                    {
-                                        pnlSignal.Color = ScottPlot.Colors.Blue;
-                                        pnlSignal.LineWidth = 2;
-                                        pnlSignal.LegendText = "Cumulative PnL";
-                                    }
-
-                                    // Zero line özelliklerini ayarla
-                                    if (pnlZeroLine is HorizontalLine pnlZLine)
-                                    {
-                                        pnlZLine.LineColor = ScottPlot.Colors.Gray;
-                                        pnlZLine.LineWidth = 1;
-                                        pnlZLine.LinePattern = ScottPlot.LinePattern.Dashed;
-                                    }
-
-                                    // Plot 7 ayarları
-                                    plot7.Title("Profit & Loss (PnL)");
-                                    plot7.YLabel("PnL");
-                                    plot7.Axes.AutoScale();
-                                    plot7.ShowLegend();
+            // Plot 4 ayarları
+            plot4.Title("MACD");
+            plot4.YLabel("MACD");
+            plot4.Axes.AutoScale();
+            plot4.ShowLegend();
 
 
+            // ===========================================
+            // PLOT 5: Stochastic Oscillator
+            // ===========================================
+            var plot5 = plotManager.AddPlot();
+            plotManager.SetPlotId(plot5, 5);
 
-                                    // ===========================================
-                                    // PLOT 8: Balance (Account Balance)
-                                    // ===========================================
-                                    var plot8 = plotManager.AddPlot();
+            // PlotManager ile Stochastic verilerini ekle
+            var kLine = plotManager.AddPlotData(plot5, PlotType.Line, stochK, 0);
+            var dLine = plotManager.AddPlotData(plot5, PlotType.Line, stochD, 1);
+            var stochLine80 = plotManager.AddPlotData(plot5, PlotType.HorizontalLine, 80.0, 2);
+            var stochLine20 = plotManager.AddPlotData(plot5, PlotType.HorizontalLine, 20.0, 3);
 
-                                    // Balance çizgisini PlotManager ile ekle
-                                    var balanceLine = plotManager.AddPlotData(plot8, PlotType.Line, balance, 0);
+            // %K line özelliklerini ayarla
+            if (kLine is Signal kSignal)
+            {
+                kSignal.Color = ScottPlot.Colors.Blue;
+                kSignal.LineWidth = 2;
+                kSignal.LegendText = "%K";
+            }
 
-                                    // Initial balance reference line PlotManager ile ekle
-                                    double initialBalance = 100000;
-                                    var initialBalanceLine = plotManager.AddPlotData(plot8, PlotType.HorizontalLine, initialBalance, 1);
+            // %D line özelliklerini ayarla
+            if (dLine is Signal dSignal)
+            {
+                dSignal.Color = ScottPlot.Colors.Red;
+                dSignal.LineWidth = 2;
+                dSignal.LegendText = "%D";
+            }
 
-                                    // Balance çizgisi özelliklerini ayarla
-                                    if (balanceLine is Signal balanceSignal)
-                                    {
-                                        balanceSignal.Color = ScottPlot.Colors.DarkGreen;
-                                        balanceSignal.LineWidth = 3;
-                                        balanceSignal.LegendText = "Account Balance";
-                                    }
+            // Overbought line (80) özelliklerini ayarla
+            if (stochLine80 is HorizontalLine line80)
+            {
+                line80.LineColor = ScottPlot.Colors.Red;
+                line80.LineWidth = 1;
+                line80.LinePattern = ScottPlot.LinePattern.Dashed;
+            }
 
-                                    // Initial balance line özelliklerini ayarla
-                                    if (initialBalanceLine is HorizontalLine initBalLine)
-                                    {
-                                        initBalLine.LineColor = ScottPlot.Colors.Gray;
-                                        initBalLine.LineWidth = 1;
-                                        initBalLine.LinePattern = ScottPlot.LinePattern.Dashed;
-                                    }
+            // Oversold line (20) özelliklerini ayarla
+            if (stochLine20 is HorizontalLine line20)
+            {
+                line20.LineColor = ScottPlot.Colors.Red;
+                line20.LineWidth = 1;
+                line20.LinePattern = ScottPlot.LinePattern.Dashed;
+            }
 
-                                    // Plot 8 ayarları
-                                    plot8.Title("Account Balance");
-                                    plot8.YLabel("Balance ($)");
-                                    plot8.XLabel("Time (Bar Index)");
-                                    plot8.Axes.AutoScale();
-                                    plot8.ShowLegend();
-            */
+            // Plot 5 ayarları
+            plot5.Title("Stochastic Oscillator");
+            plot5.YLabel("Stochastic");
+            plot5.Axes.SetLimitsY(0, 100);
+            plot5.Axes.AutoScaleX();
+            plot5.ShowLegend();
+
+            // ===========================================
+            // PLOT 6: Trading Signals (Buy/Sell)
+            // ===========================================
+            var plot6 = plotManager.AddPlot();
+            plotManager.SetPlotId(plot6, 6);
+
+            // Buy ve sell signal verilerini hazırla
+            List<double> buySignalX = new List<double>();
+            List<double> buySignalY = new List<double>();
+            List<double> sellSignalX = new List<double>();
+            List<double> sellSignalY = new List<double>();
+
+            for (int i = 0; i < signals.Length; i++)
+            {
+                if (signals[i] == 1) // Buy signal
+                {
+                    buySignalX.Add(i);
+                    buySignalY.Add(1); // Signal = 1 (Buy)
+                }
+                else if (signals[i] == -1) // Sell signal
+                {
+                    sellSignalX.Add(i);
+                    sellSignalY.Add(-1); // Signal = -1 (Sell)
+                }
+            }
+
+            // Trading signals PlotManager ile ekle
+            var buyScatter = buySignalX.Count > 0 ? plotManager.AddPlotData(plot6, PlotType.Scatter, (buySignalX.ToArray(), buySignalY.ToArray()), 0) : null;
+            var sellScatter = sellSignalX.Count > 0 ? plotManager.AddPlotData(plot6, PlotType.Scatter, (sellSignalX.ToArray(), sellSignalY.ToArray()), 1) : null;
+
+            // Zero line PlotManager ile ekle
+            var signalZeroLine = plotManager.AddPlotData(plot6, PlotType.HorizontalLine, 0.0, 2);
+
+            // Buy signals özelliklerini ayarla
+            if (buyScatter is ScottPlot.Plottables.Scatter buyScatterPlot)
+            {
+                buyScatterPlot.Color = ScottPlot.Colors.Green;
+                buyScatterPlot.MarkerSize = 10;
+                buyScatterPlot.MarkerShape = ScottPlot.MarkerShape.FilledTriangleUp;
+                buyScatterPlot.LegendText = "Buy";
+            }
+
+            // Sell signals özelliklerini ayarla
+            if (sellScatter is ScottPlot.Plottables.Scatter sellScatterPlot)
+            {
+                sellScatterPlot.Color = ScottPlot.Colors.Red;
+                sellScatterPlot.MarkerSize = 10;
+                sellScatterPlot.MarkerShape = ScottPlot.MarkerShape.FilledTriangleDown;
+                sellScatterPlot.LegendText = "Sell";
+            }
+
+            // Zero line özelliklerini ayarla
+            if (signalZeroLine is HorizontalLine signalZLine)
+            {
+                signalZLine.LineColor = ScottPlot.Colors.Gray;
+                signalZLine.LineWidth = 1;
+                signalZLine.LinePattern = ScottPlot.LinePattern.Dashed;
+            }
+
+            // Plot 6 ayarları
+            plot6.Title("Trading Signals");
+            plot6.YLabel("Signal");
+            plot6.Axes.SetLimitsY(-1.5, 1.5);
+            plot6.Axes.AutoScaleX();
+            plot6.ShowLegend();
+
+            // ===========================================
+            // PLOT 7: PnL (Profit and Loss)
+            // ===========================================
+            var plot7 = plotManager.AddPlot();
+            plotManager.SetPlotId(plot7, 7);
+
+            // PnL çizgisini PlotManager ile ekle
+            var pnlLine = plotManager.AddPlotData(plot7, PlotType.Line, cumulativePnL, 0);  //unrealizedPnL, realizedPnL, cumulativePnL
+
+            // Zero line PlotManager ile ekle
+            var pnlZeroLine = plotManager.AddPlotData(plot7, PlotType.HorizontalLine, 0.0, 1);
+
+            // PnL çizgisi özelliklerini ayarla
+            if (pnlLine is Signal pnlSignal)
+            {
+                pnlSignal.Color = ScottPlot.Colors.Blue;
+                pnlSignal.LineWidth = 2;
+                pnlSignal.LegendText = "Cumulative PnL";
+            }
+
+            // Zero line özelliklerini ayarla
+            if (pnlZeroLine is HorizontalLine pnlZLine)
+            {
+                pnlZLine.LineColor = ScottPlot.Colors.Gray;
+                pnlZLine.LineWidth = 1;
+                pnlZLine.LinePattern = ScottPlot.LinePattern.Dashed;
+            }
+
+            // Plot 7 ayarları
+            plot7.Title("Profit & Loss (PnL)");
+            plot7.YLabel("PnL");
+            plot7.Axes.AutoScale();
+            plot7.ShowLegend();
+
+
+
+            // ===========================================
+            // PLOT 8: Balance (Account Balance)
+            // ===========================================
+            var plot8 = plotManager.AddPlot();
+            plotManager.SetPlotId(plot8, 8);
+
+            // Balance çizgisini PlotManager ile ekle
+            var balanceLine = plotManager.AddPlotData(plot8, PlotType.Line, balance, 0);
+
+            // Initial balance reference line PlotManager ile ekle
+            double initialBalance = 100000;
+            var initialBalanceLine = plotManager.AddPlotData(plot8, PlotType.HorizontalLine, initialBalance, 1);
+
+            // Balance çizgisi özelliklerini ayarla
+            if (balanceLine is Signal balanceSignal)
+            {
+                balanceSignal.Color = ScottPlot.Colors.DarkGreen;
+                balanceSignal.LineWidth = 3;
+                balanceSignal.LegendText = "Account Balance";
+            }
+
+            // Initial balance line özelliklerini ayarla
+            if (initialBalanceLine is HorizontalLine initBalLine)
+            {
+                initBalLine.LineColor = ScottPlot.Colors.Gray;
+                initBalLine.LineWidth = 1;
+                initBalLine.LinePattern = ScottPlot.LinePattern.Dashed;
+            }
+
+            // Plot 8 ayarları
+            plot8.Title("Account Balance");
+            plot8.YLabel("Balance ($)");
+            plot8.XLabel("Time (Bar Index)");
+            plot8.Axes.AutoScale();
+            plot8.ShowLegend();
+
+            // ===========================================
+            // Plot yüksekliklerini setle
+            // ===========================================
+            // ESKI KOD - ARTIK GEREKSIZ (DraggableRows kullanılıyor)
+
+            /*for (int i = 0; i < plotManager.Count; i++)
+            {
+                if (plotManager.GetPlotId(i) == "0")
+                {
+                    plotManager.SetPlotHeightOnly(i, 400);
+                }
+                else // Diğer plotlar (indikatörler)
+                {
+                    plotManager.SetPlotHeightOnly(i, 200);
+                }
+            }*/
+
+            // ===================================================================
+            // DraggableRows Layout ile plot yüksekliklerini ayarla
+            // ===================================================================
+            // DraggableRows layout oluştur
+            var customLayout = new ScottPlot.MultiplotLayouts.DraggableRows();
+            tradingChart.Plot.Multiplot.Layout = customLayout;
+
+            // Her plot için yükseklikleri belirle
+            var plotHeights = new List<float>();
+            for (int i = 0; i < plotManager.Count; i++)
+            {
+                if (plotManager.GetPlotId(i) == "0")
+                {
+                    plotHeights.Add(400); // Candlestick chart için daha yüksek
+                }
+                else
+                {
+                    plotHeights.Add(200); // Diğer indikatörler için standart yükseklik
+                }
+            }
+
+            // Yükseklikleri uygula
+            customLayout.SetHeights(plotHeights.ToArray());
+
+            // ===================================================================
+            // Tüm plotların axes genişliklerini sabitle (alignment için)
+            // ===================================================================
+            foreach (var plot in tradingChart.Plot.Multiplot.GetPlots())
+            {
+                //plot.Axes.Left.LockSize(10);
+                //plot.Axes.Right.LockSize(80);
+            }
+
+            // Toplam yüksekliği hesapla (scroll için gerekli)
+            int totalHeight = (int)plotHeights.Sum();
+
+            // FormsPlot'un toplam yüksekliğini ayarla
+            tradingChart.Plot.Dock = DockStyle.None;
+            tradingChart.Plot.Height = totalHeight;
+            tradingChart.Plot.Location = new Point(0, 0);
+
+            // Genişliği parent panel'e göre ayarla (panelCenter'ın gerçek genişliği)
+            // Reflection ile panelCenter'ı al
+            var panelCenterProp = tradingChart.GetType().GetProperty("panelCenter", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            Panel? panelCenterObj = panelCenterProp?.GetValue(tradingChart) as Panel;
+
+            int adjustedWidth = 0;
+
+            if (panelCenterObj != null)
+            {
+                // panelCenter'ın gerçek kullanılabilir alanını kullan
+                adjustedWidth = panelCenterObj.ClientSize.Width;
+
+                // LeftPanel visible ise ekstra düzeltme yap
+                if (tradingChart.LeftPanel.Visible)
+                {
+                    adjustedWidth -= (tradingChart.LeftPanel.Width - 1); // LeftPanel width + tolerans
+                }
+
+                // RightPanel visible ise ekstra düzeltme yap
+                if (tradingChart.RightPanel.Visible)
+                {
+                    adjustedWidth -= (tradingChart.RightPanel.Width - 1); // RightPanel width + tolerans
+                }
+
+                // TopPanel visible ise ekstra düzeltme
+                if (tradingChart.TopPanel.Visible)
+                {
+                    //adjustedWidth -= 5; // Küçük tolerans
+                }
+
+                // Scrollbar ve plot margin'leri için ekstra boşluk (axes lock size kullanıldığı için daha az gerekli)
+                adjustedWidth -= 20;
+
+                tradingChart.Plot.Width = adjustedWidth;
+
+                // Debug: Genişlik bilgilerini yazdır
+                System.Diagnostics.Debug.WriteLine($"PanelCenter Width: {panelCenterObj.ClientSize.Width}, Adjusted Width: {adjustedWidth}, FormsPlot Width: {tradingChart.Plot.Width}");
+            }
+            else
+            {
+                // Fallback: panelCenter bulunamadı, tradingChart.ClientSize kullan
+                adjustedWidth = tradingChart.ClientSize.Width;
+
+                // LeftPanel visible ise çıkar
+                if (tradingChart.LeftPanel.Visible)
+                {
+                    adjustedWidth -= tradingChart.LeftPanel.Width;
+                }
+
+                // RightPanel visible ise çıkar
+                if (tradingChart.RightPanel.Visible)
+                {
+                    adjustedWidth -= tradingChart.RightPanel.Width;
+                }
+
+                // TopPanel visible ise (yükseklik olduğu için genişliği etkilemez ama tutarlılık için)
+                if (tradingChart.TopPanel.Visible)
+                {
+                    // TopPanel genişliği etkilemez
+                }
+
+                // BottomPanel visible ise (yükseklik olduğu için genişliği etkilemez)
+                if (tradingChart.BottomPanel.Visible)
+                {
+                    // BottomPanel genişliği etkilemez
+                }
+
+                // Scrollbar ve plot margin'leri için ekstra boşluk
+                adjustedWidth -= 20;
+
+                tradingChart.Plot.Width = adjustedWidth;
+
+                // Debug: Fallback kullanıldı
+                System.Diagnostics.Debug.WriteLine($"PanelCenter null! TradingChart Width: {tradingChart.ClientSize.Width}, Adjusted Width: {adjustedWidth}");
+            }
+
+            // TradingChart resize event'i ekle - form büyüdüğünde FormsPlot genişliğini güncelle
+            tradingChart.Resize += (s, ev) =>
+            {
+                // Multiplot aktif ise genişliği güncelle
+                try
+                {
+                    if (tradingChart.Plot.Dock == DockStyle.None && tradingChart.Plot.Height > 1000) // Multiplot modunda
+                    {
+                        if (panelCenterObj != null)
+                        {
+                            int resizedWidth = panelCenterObj.ClientSize.Width;
+
+                            // LeftPanel visible ise ekstra düzeltme yap
+                            if (tradingChart.LeftPanel.Visible)
+                            {
+                                resizedWidth -= tradingChart.LeftPanel.Width + 5;
+                            }
+
+                            // RightPanel visible ise ekstra düzeltme yap
+                            if (tradingChart.RightPanel.Visible)
+                            {
+                                resizedWidth -= tradingChart.RightPanel.Width + 5;
+                            }
+
+                            // TopPanel visible ise ekstra düzeltme
+                            if (tradingChart.TopPanel.Visible)
+                            {
+                                resizedWidth -= 5;
+                            }
+
+                            // Scrollbar ve plot margin'leri için ekstra boşluk (axes lock size kullanıldığı için daha az gerekli)
+                            resizedWidth -= 20;
+
+                            tradingChart.Plot.Width = resizedWidth;
+                        }
+                        else
+                        {
+                            tradingChart.Plot.Width = tradingChart.ClientSize.Width - SystemInformation.VerticalScrollBarWidth - 20;
+                        }
+                    }
+                }
+                catch { }
+            };
+
+            // ===================================================================
+
+
+
 
 
             // ===========================================
             // Plot yüksekliklerini ayarla
             // ===========================================
+            // ESKI KOD - ARTIK GEREKSIZ (DraggableRows kullanılıyor)
+            /*
             for (int i = 0; i < plotManager.Count; i++)
             {
                 if (plotManager.GetPlotId(i) == "0")
                 {
-                    plotManager.SetPlotHeightOnly(i, 600);
+                    plotManager.SetPlotHeightOnly(i, 200);
                 }
                 else // Diğer plotlar (indikatörler)
                 {
-                    plotManager.SetPlotHeightOnly(i, 400);
+                    plotManager.SetPlotHeightOnly(i, 100);
                 }
             }
+
+            // ===========================================
+            //
+            // ===========================================
+            int totalHeight = 0;
+            for (int i = 0; i < plotManager.Count; i++)
+            {
+                totalHeight += plotManager.GetPlotHeight(i);
+            }
+            */
+
+
+
 
             // ===========================================
             // Finalize Layout and Refresh

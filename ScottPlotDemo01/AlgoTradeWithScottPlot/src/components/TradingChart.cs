@@ -164,10 +164,10 @@ namespace AlgoTradeWithScottPlot.Components
             rightZoomInButton = new Button();
             rightZoomOutButton = new Button();
             panelCenter = new Panel();
+            formsPlot = new FormsPlot();
             hScrollBar1 = new HScrollBar();
             vScrollBar = new VScrollBar();
             statusStrip1 = new StatusStrip();
-            this.formsPlot = new FormsPlot();
             panelTop.SuspendLayout();
             panelBottom.SuspendLayout();
             ((ISupportInitialize)zoomTrackBar).BeginInit();
@@ -510,7 +510,7 @@ namespace AlgoTradeWithScottPlot.Components
             // 
             panelCenter.AutoScroll = true;
             panelCenter.BackColor = Color.Transparent;
-            panelCenter.Controls.Add(this.formsPlot);
+            panelCenter.Controls.Add(formsPlot);
             panelCenter.Controls.Add(hScrollBar1);
             panelCenter.Controls.Add(vScrollBar);
             panelCenter.Controls.Add(statusStrip1);
@@ -519,6 +519,17 @@ namespace AlgoTradeWithScottPlot.Components
             panelCenter.Name = "panelCenter";
             panelCenter.Size = new Size(654, 520);
             panelCenter.TabIndex = 5;
+            // 
+            // formsPlot
+            // 
+            formsPlot.BackColor = Color.Transparent;
+            formsPlot.DisplayScale = 1F;
+            formsPlot.Dock = DockStyle.Fill;
+            formsPlot.Location = new Point(0, 0);
+            formsPlot.Name = "formsPlot";
+            formsPlot.Padding = new Padding(25);
+            formsPlot.Size = new Size(644, 481);
+            formsPlot.TabIndex = 5;
             // 
             // hScrollBar1
             // 
@@ -545,17 +556,6 @@ namespace AlgoTradeWithScottPlot.Components
             statusStrip1.Size = new Size(654, 22);
             statusStrip1.TabIndex = 2;
             statusStrip1.Text = "statusStrip1";
-            // 
-            // formsPlot
-            // 
-            this.formsPlot.BackColor = Color.Transparent;
-            this.formsPlot.DisplayScale = 1F;
-            this.formsPlot.Dock = DockStyle.Fill;
-            this.formsPlot.Location = new Point(0, 0);
-            this.formsPlot.Name = "formsPlot";
-            this.formsPlot.Padding = new Padding(25);
-            this.formsPlot.Size = new Size(644, 481);
-            this.formsPlot.TabIndex = 5;
             // 
             // TradingChart
             // 
