@@ -1088,6 +1088,9 @@ namespace AlgoTradeWithScottPlot
             // Y ekseni tercihi: true = sağ eksen kullan, false = sol eksen kullan
             bool useRightYAxis = false;
 
+            // Cross-hair tercihi: true = tüm plotlarda sync, false = sadece mouse'un üzerindeki plot'ta
+            bool useCrossHairAllPlots = true;
+
             // ===========================================
             // PLOT 0: Candlestick (Price Chart)  
             // ===========================================
@@ -1784,6 +1787,125 @@ namespace AlgoTradeWithScottPlot
             }
             // ===================================================================
 
+            // ===================================================================
+            // Cross-hair - Tüm plotlarda mouse koordinatlarını göster
+            // ===================================================================
+            // Her plot için cross-hair oluştur
+            var crosshairs = new List<ScottPlot.Plottables.Crosshair>();
+            foreach (var plot in allPlots)
+            {
+                var crosshair = plot.Add.Crosshair(0, 0);
+                crosshair.IsVisible = false;
+                crosshair.LineColor = ScottPlot.Colors.Red.WithAlpha(0.7);
+                crosshair.LineWidth = 1;
+                crosshair.LinePattern = ScottPlot.LinePattern.Solid;
+                crosshairs.Add(crosshair);
+            }
+
+            // Mouse move event - Crosshair'i güncelle (flag'e göre)
+            tradingChart.Plot.MouseMove += (s, e) =>
+            {
+                // Eğer divider sürükleniyorsa crosshair gösterme
+                if (dividerBeingDragged is not null) return;
+
+                // Mouse koordinatlarını al
+                var mousePixel = new ScottPlot.Pixel(e.X, e.Y);
+
+                if (useCrossHairAllPlots)
+                {
+                    // MOD 1: Tüm plotlarda crosshair göster (X senkronize, Y her plot'ta farklı)
+                    // Önce mouse'un hangi plot üzerinde olduğunu bul
+                    int mouseOverPlotIndex = -1;
+                    for (int i = 0; i < allPlots.Length; i++)
+                    {
+                        var plotRect = allPlots[i].RenderManager.LastRender.DataRect;
+                        if (e.X >= plotRect.Left && e.X <= plotRect.Right &&
+                            e.Y >= plotRect.Top && e.Y <= plotRect.Bottom)
+                        {
+                            mouseOverPlotIndex = i;
+                            break;
+                        }
+                    }
+
+                    // Eğer mouse herhangi bir plot üzerindeyse
+                    if (mouseOverPlotIndex >= 0)
+                    {
+                        // X koordinatını mouse'un olduğu plot'tan al
+                        var mainCoords = allPlots[mouseOverPlotIndex].GetCoordinates(mousePixel);
+                        double sharedX = mainCoords.X;
+
+                        // Tüm plotlarda aynı X koordinatında crosshair göster
+                        for (int i = 0; i < allPlots.Length && i < crosshairs.Count; i++)
+                        {
+                            var plot = allPlots[i];
+                            var crosshair = crosshairs[i];
+
+                            if (i == mouseOverPlotIndex)
+                            {
+                                // Mouse'un üzerindeki plot - tam koordinatları kullan
+                                crosshair.Position = mainCoords;
+                            }
+                            else
+                            {
+                                // Diğer plotlar - aynı X, kendi plot'larının ortasında Y
+                                var plotLimits = plot.Axes.GetLimits();
+                                double centerY = (plotLimits.Top + plotLimits.Bottom) / 2;
+                                crosshair.Position = new ScottPlot.Coordinates(sharedX, centerY);
+                            }
+
+                            crosshair.IsVisible = true;
+                        }
+                    }
+                    else
+                    {
+                        // Mouse hiçbir plot üzerinde değil - tümünü gizle
+                        foreach (var crosshair in crosshairs)
+                        {
+                            crosshair.IsVisible = false;
+                        }
+                    }
+                }
+                else
+                {
+                    // MOD 2: Sadece mouse'un üzerindeki plot'ta crosshair göster
+                    for (int i = 0; i < allPlots.Length && i < crosshairs.Count; i++)
+                    {
+                        var plot = allPlots[i];
+                        var crosshair = crosshairs[i];
+
+                        // Mouse'un bu plot üzerinde olup olmadığını kontrol et
+                        var plotRect = plot.RenderManager.LastRender.DataRect;
+                        if (e.X >= plotRect.Left && e.X <= plotRect.Right &&
+                            e.Y >= plotRect.Top && e.Y <= plotRect.Bottom)
+                        {
+                            // Mouse bu plot üzerinde - koordinatları al
+                            var coords = plot.GetCoordinates(mousePixel);
+                            crosshair.Position = coords;
+                            crosshair.IsVisible = true;
+                        }
+                        else
+                        {
+                            // Mouse bu plot üzerinde değil - gizle
+                            crosshair.IsVisible = false;
+                        }
+                    }
+                }
+
+                tradingChart.Plot.Refresh();
+            };
+
+            // Mouse leave event - Crosshair'leri gizle
+            tradingChart.Plot.MouseLeave += (s, e) =>
+            {
+                foreach (var crosshair in crosshairs)
+                {
+                    crosshair.IsVisible = false;
+                }
+                tradingChart.Plot.Refresh();
+            };
+            // ===================================================================
+
+            // ===================================================================
 
             // ===========================================
             // Plot yüksekliklerini ayarla
