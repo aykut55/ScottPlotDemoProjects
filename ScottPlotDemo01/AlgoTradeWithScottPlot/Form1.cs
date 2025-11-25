@@ -1483,8 +1483,8 @@ namespace AlgoTradeWithScottPlot
             // ===================================================================
             foreach (var plot in tradingChart.Plot.Multiplot.GetPlots())
             {
-                //plot.Axes.Left.LockSize(10);
-                //plot.Axes.Right.LockSize(80);
+                //plot.Axes.Left.LockSize(80);
+                plot.Axes.Right.LockSize(20);
             }
 
             // Toplam yüksekliği hesapla (scroll için gerekli)
@@ -1571,6 +1571,37 @@ namespace AlgoTradeWithScottPlot
                 System.Diagnostics.Debug.WriteLine($"PanelCenter null! TradingChart Width: {tradingChart.ClientSize.Width}, Adjusted Width: {adjustedWidth}");
             }
 
+            // ===================================================================
+            // Mouse event'leri - Plotlar arasındaki divider'ları sürüklenebilir yap
+            // ===================================================================
+            int? dividerBeingDragged = null;
+
+            tradingChart.Plot.MouseDown += (s, e) =>
+            {
+                dividerBeingDragged = customLayout.GetDivider(e.Y);
+                tradingChart.Plot.UserInputProcessor.IsEnabled = dividerBeingDragged is null;
+            };
+
+            tradingChart.Plot.MouseUp += (s, e) =>
+            {
+                if (dividerBeingDragged is not null)
+                {
+                    dividerBeingDragged = null;
+                    tradingChart.Plot.UserInputProcessor.IsEnabled = true;
+                }
+            };
+
+            tradingChart.Plot.MouseMove += (s, e) =>
+            {
+                if (dividerBeingDragged is not null)
+                {
+                    customLayout.SetDivider(dividerBeingDragged.Value, e.Y);
+                    tradingChart.Plot.Refresh();
+                }
+
+                Cursor = customLayout.GetDivider(e.Y) is not null ? Cursors.SizeNS : Cursors.Default;
+            };
+
             // TradingChart resize event'i ekle - form büyüdüğünde FormsPlot genişliğini güncelle
             tradingChart.Resize += (s, ev) =>
             {
@@ -1615,6 +1646,39 @@ namespace AlgoTradeWithScottPlot
                 catch { }
             };
 
+            // ===================================================================
+
+
+
+            // ===================================================================
+            // Grid ve X-axis sharing ayarları
+            // ===================================================================
+            // Tüm plotları al
+            var allPlots = tradingChart.Plot.Multiplot.GetPlots();
+
+            if (allPlots.Length > 0)
+            {
+                // En alttaki plot (plot8 - Balance)
+                var bottomPlot = allPlots[allPlots.Length - 1];
+
+                // Tüm plotların grid'lerini en alttaki plot'un X ekseninden tick'leri kullanacak şekilde ayarla
+                foreach (var plot in allPlots)
+                {
+                    if (plot != bottomPlot)
+                    {
+                        plot.Grid.XAxis = bottomPlot.Axes.Bottom;
+                    }
+                }
+
+                // Tüm plotların grid'lerini kendi sağ Y eksenlerinden tick'leri kullanacak şekilde ayarla
+                foreach (var plot in allPlots)
+                {
+                    plot.Grid.YAxis = plot.Axes.Right;
+                }
+
+                // Tüm plotların X eksenlerini paylaştır (link et) - zoom/pan senkronize olsun
+                tradingChart.Plot.Multiplot.SharedAxes.ShareX(allPlots);
+            }
             // ===================================================================
 
 
