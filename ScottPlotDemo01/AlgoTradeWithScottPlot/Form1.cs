@@ -1085,6 +1085,9 @@ namespace AlgoTradeWithScottPlot
 
             plotManager.RemoveAllPlots();
 
+            // Y ekseni tercihi: true = sağ eksen kullan, false = sol eksen kullan
+            bool useRightYAxis = false;
+
             // ===========================================
             // PLOT 0: Candlestick (Price Chart)  
             // ===========================================
@@ -1467,11 +1470,11 @@ namespace AlgoTradeWithScottPlot
             {
                 if (plotManager.GetPlotId(i) == "0")
                 {
-                    plotHeights.Add(400); // Candlestick chart için daha yüksek
+                    plotHeights.Add(600); // Candlestick chart için daha yüksek
                 }
                 else
                 {
-                    plotHeights.Add(200); // Diğer indikatörler için standart yükseklik
+                    plotHeights.Add(300); // Diğer indikatörler için standart yükseklik
                 }
             }
 
@@ -1479,12 +1482,20 @@ namespace AlgoTradeWithScottPlot
             customLayout.SetHeights(plotHeights.ToArray());
 
             // ===================================================================
-            // Tüm plotların axes genişliklerini sabitle (alignment için)
+            // Tüm plotların axes genişliklerini sabitle (alignment için, flag'e göre)
             // ===================================================================
             foreach (var plot in tradingChart.Plot.Multiplot.GetPlots())
             {
-                //plot.Axes.Left.LockSize(80);
-                plot.Axes.Right.LockSize(20);
+                if (useRightYAxis)
+                {
+                    plot.Axes.Left.LockSize(50);   // Sol ekseni küçük tut
+                    plot.Axes.Right.LockSize(80);  // Sağ ekseni geniş tut (tick'ler ve label'lar için)
+                }
+                else
+                {
+                    plot.Axes.Left.LockSize(80);   // Sol ekseni geniş tut (tick'ler ve label'lar için)
+                    plot.Axes.Right.LockSize(50);  // Sağ ekseni küçük tut
+                }
             }
 
             // Toplam yüksekliği hesapla (scroll için gerekli)
@@ -1670,10 +1681,10 @@ namespace AlgoTradeWithScottPlot
                     }
                 }
 
-                // Tüm plotların grid'lerini kendi sağ Y eksenlerinden tick'leri kullanacak şekilde ayarla
+                // Tüm plotların grid'lerini Y ekseninden tick'leri kullanacak şekilde ayarla (flag'e göre)
                 foreach (var plot in allPlots)
                 {
-                    plot.Grid.YAxis = plot.Axes.Right;
+                    plot.Grid.YAxis = useRightYAxis ? plot.Axes.Right : plot.Axes.Left;
                 }
 
                 // Tüm plotların X eksenlerini paylaştır (link et) - zoom/pan senkronize olsun
@@ -1681,8 +1692,61 @@ namespace AlgoTradeWithScottPlot
             }
             // ===================================================================
 
+            // ===================================================================
+            // Plottable'ları Y eksenine bağla (flag'e göre)
+            // ===================================================================
+            if (useRightYAxis)
+            {
+                foreach (var plot in allPlots)
+                {
+                    // Plot içindeki tüm plottable'ları Right Y eksenine bağla
+                    foreach (var plottable in plot.GetPlottables())
+                    {
+                        plottable.Axes.YAxis = plot.Axes.Right;
+                    }
+                }
+            }
+            // (useRightYAxis = false ise, plottable'lar zaten default olarak Left'te)
+            // ===================================================================
 
+            // ===================================================================
+            // Y ekseni label'larını ve tick'lerini flag'e göre düzenle
+            // ===================================================================
+            if (useRightYAxis)
+            {
+                foreach (var plot in allPlots)
+                {
+                    // Sol eksendeki label'ı sağ eksene taşı
+                    string leftLabel = plot.Axes.Left.Label.Text;
+                    if (!string.IsNullOrEmpty(leftLabel))
+                    {
+                        plot.Axes.Right.Label.Text = leftLabel;
+                        plot.Axes.Left.Label.Text = "";  // Sol ekseni temizle
+                    }
 
+                    // Sol eksendeki tick label'larını gizle
+                    plot.Axes.Left.TickLabelStyle.IsVisible = false;
+                    plot.Axes.Right.TickLabelStyle.IsVisible = true;
+                }
+            }
+            else
+            {
+                foreach (var plot in allPlots)
+                {
+                    // Sağ eksendeki label'ı sol eksene taşı (eğer varsa)
+                    string rightLabel = plot.Axes.Right.Label.Text;
+                    if (!string.IsNullOrEmpty(rightLabel))
+                    {
+                        plot.Axes.Left.Label.Text = rightLabel;
+                        plot.Axes.Right.Label.Text = "";  // Sağ ekseni temizle
+                    }
+
+                    // Sağ eksendeki tick label'larını gizle
+                    plot.Axes.Left.TickLabelStyle.IsVisible = true;
+                    plot.Axes.Right.TickLabelStyle.IsVisible = false;
+                }
+            }
+            // ===================================================================
 
 
             // ===========================================
