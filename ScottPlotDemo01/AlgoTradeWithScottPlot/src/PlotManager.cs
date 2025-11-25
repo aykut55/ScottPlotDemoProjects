@@ -15,9 +15,17 @@ namespace AlgoTradeWithScottPlot.Components
         private TradingChart? _tradingChart;
         private FormsPlot? _formsPlot;
         private readonly Dictionary<string, PlotInfo> _plots;
+        private readonly Dictionary<int, string> _plotIds; // Plot index -> Plot ID mapping
+        private readonly Dictionary<ScottPlot.Plot, int> _plotToIndex; // Plot object -> Index mapping
         private readonly object _lockObject = new object();
         private int _plotCounter = 0;
         private bool _isInitialized = false;
+        
+        // Default boyutlar
+        public static readonly int DefaultWidth = 1200;
+        public static readonly int DefaultHeight = 600;
+        public static readonly int DefaultCandlestickHeight = 800;
+        public static readonly int DefaultIndicatorHeight = 400;
 
         public IReadOnlyDictionary<string, PlotInfo> Plots => _plots;
 
@@ -26,6 +34,8 @@ namespace AlgoTradeWithScottPlot.Components
         public PlotManager()
         {
             _plots = new Dictionary<string, PlotInfo>();
+            _plotIds = new Dictionary<int, string>();
+            _plotToIndex = new Dictionary<ScottPlot.Plot, int>();
         }
 
         public void SetTradingChart(TradingChart tradingChart)
@@ -72,6 +82,8 @@ namespace AlgoTradeWithScottPlot.Components
                     
                     // Plot bilgilerini temizle
                     _plots.Clear();
+                    _plotIds.Clear();
+                    _plotToIndex.Clear();
                     
                     // Chart'ı yenile
                     _formsPlot.Refresh();
@@ -131,6 +143,9 @@ namespace AlgoTradeWithScottPlot.Components
 */
                 // Yeni plot ekle
                 var plot = _formsPlot.Multiplot.AddPlot();
+                
+                // Plot nesnesini index ile eşleştir
+                _plotToIndex[plot] = _plotCounter;
                 
                 // Plot counter'ı artır
                 _plotCounter++;
@@ -199,7 +214,15 @@ namespace AlgoTradeWithScottPlot.Components
                 // Multiplot modunda - tüm plotlar multiplot'tan
                 try
                 {
-                    return _formsPlot.Multiplot.GetPlot(index);
+                    var plot = _formsPlot.Multiplot.GetPlot(index);
+                    
+                    // Plot nesnesini index ile eşleştir (eğer yoksa)
+                    if (!_plotToIndex.ContainsKey(plot))
+                    {
+                        _plotToIndex[plot] = index;
+                    }
+                    
+                    return plot;
                 }
                 catch (Exception ex)
                 {
@@ -212,7 +235,15 @@ namespace AlgoTradeWithScottPlot.Components
                 if (index == 0)
                 {
                     _formsPlot.Plot.Clear();
-                    return _formsPlot.Plot;
+                    var plot = _formsPlot.Plot;
+                    
+                    // Plot nesnesini index ile eşleştir (eğer yoksa)
+                    if (!_plotToIndex.ContainsKey(plot))
+                    {
+                        _plotToIndex[plot] = index;
+                    }
+                    
+                    return plot;
                 }
                 else
                 {
@@ -391,6 +422,275 @@ namespace AlgoTradeWithScottPlot.Components
                 throw new InvalidOperationException("TradingChart ayarlanmamış. Önce SetTradingChart() çağırın.");
 
             _tradingChart.Plot.Refresh();
+        }
+
+        /// <summary>
+        /// Plot'u default boyutlarla initialize eder
+        /// </summary>
+        /// <param name="plotIndex">Plot indeksi</param>
+        /// <param name="useCandlestickHeight">Plot 0 (Candlestick) için true, diğerleri için false</param>
+        public void InitializePlotSize(int plotIndex, bool useCandlestickHeight = false)
+        {
+            int height = useCandlestickHeight ? DefaultCandlestickHeight : DefaultIndicatorHeight;
+            SetPlotSize(plotIndex, DefaultWidth, height);
+        }
+
+        /// <summary>
+        /// Plot'un yüksekliğini ayarlar (genişlik default kalır)
+        /// </summary>
+        /// <param name="plotIndex">Plot indeksi</param>
+        /// <param name="height">Yükseklik</param>
+        public void SetPlotHeightOnly(int plotIndex, int height)
+        {
+            SetPlotSize(plotIndex, DefaultWidth, height);
+        }
+
+        /// <summary>
+        /// Belirtilen plot'un boyutunu ayarlar
+        /// </summary>
+        /// <param name="plotIndex">Plot indeksi</param>
+        /// <param name="width">Genişlik</param>
+        /// <param name="height">Yükseklik</param>
+        public void SetPlotSize(int plotIndex, int width, int height)
+        {
+            if (_formsPlot == null)
+                throw new InvalidOperationException("TradingChart ayarlanmamış. Önce SetTradingChart() çağırın.");
+
+            lock (_lockObject)
+            {
+                try
+                {
+                    // FormsPlot'un ana boyutunu ayarla
+                    if (plotIndex == 0 || !_isInitialized)
+                    {
+                        _formsPlot.Size = new Size(width, height);
+                        _formsPlot.Width = width;
+                        _formsPlot.Height = height;
+                    }
+                    else
+                    {
+                        // Multiplot modunda bireysel plot boyutları ScottPlot tarafından otomatik yönetilir
+                        // Bu durumda ana FormsPlot boyutunu ayarlayıp layout'u yenileriz
+                        _formsPlot.Size = new Size(width, height);
+                        FinalizeLayout();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error setting plot size: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Belirtilen plot'un genişliğini ayarlar
+        /// </summary>
+        /// <param name="plotIndex">Plot indeksi</param>
+        /// <param name="width">Genişlik</param>
+        public void SetPlotWidth(int plotIndex, int width)
+        {
+            if (_formsPlot == null)
+                throw new InvalidOperationException("TradingChart ayarlanmamış. Önce SetTradingChart() çağırın.");
+
+            lock (_lockObject)
+            {
+                try
+                {
+                    var currentHeight = GetPlotHeight(plotIndex);
+                    SetPlotSize(plotIndex, width, currentHeight);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error setting plot width: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Belirtilen plot'un yüksekliğini ayarlar
+        /// </summary>
+        /// <param name="plotIndex">Plot indeksi</param>
+        /// <param name="height">Yükseklik</param>
+        public void SetPlotHeight(int plotIndex, int height)
+        {
+            if (_formsPlot == null)
+                throw new InvalidOperationException("TradingChart ayarlanmamış. Önce SetTradingChart() çağırın.");
+
+            lock (_lockObject)
+            {
+                try
+                {
+                    var currentWidth = GetPlotWidth(plotIndex);
+                    SetPlotSize(plotIndex, currentWidth, height);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error setting plot height: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Belirtilen plot'un boyutunu döndürür
+        /// </summary>
+        /// <param name="plotIndex">Plot indeksi</param>
+        /// <returns>Plot boyutu (Width, Height)</returns>
+        public (int Width, int Height) GetPlotSize(int plotIndex)
+        {
+            if (_formsPlot == null)
+                throw new InvalidOperationException("TradingChart ayarlanmamış. Önce SetTradingChart() çağırın.");
+
+            try
+            {
+                // FormsPlot'un boyutunu döndür (tüm plotlar için geçerli)
+                return (_formsPlot.Width, _formsPlot.Height);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting plot size: {ex.Message}");
+                return (800, 600); // Default boyut
+            }
+        }
+
+        /// <summary>
+        /// Belirtilen plot'un genişliğini döndürür
+        /// </summary>
+        /// <param name="plotIndex">Plot indeksi</param>
+        /// <returns>Plot genişliği</returns>
+        public int GetPlotWidth(int plotIndex)
+        {
+            return GetPlotSize(plotIndex).Width;
+        }
+
+        /// <summary>
+        /// Belirtilen plot'un yüksekliğini döndürür
+        /// </summary>
+        /// <param name="plotIndex">Plot indeksi</param>
+        /// <returns>Plot yüksekliği</returns>
+        public int GetPlotHeight(int plotIndex)
+        {
+            return GetPlotSize(plotIndex).Height;
+        }
+
+        /// <summary>
+        /// Tüm plotları belirtilen boyuta ayarlar
+        /// </summary>
+        /// <param name="width">Genişlik</param>
+        /// <param name="height">Yükseklik</param>
+        public void SetAllPlotsSize(int width, int height)
+        {
+            if (_formsPlot == null)
+                throw new InvalidOperationException("TradingChart ayarlanmamış. Önce SetTradingChart() çağırın.");
+
+            lock (_lockObject)
+            {
+                try
+                {
+                    _formsPlot.Size = new Size(width, height);
+                    _formsPlot.Width = width;
+                    _formsPlot.Height = height;
+                    FinalizeLayout();
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error setting all plots size: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Belirtilen plot index'ine ID atar
+        /// </summary>
+        /// <param name="plotIndex">Plot indeksi</param>
+        /// <param name="plotId">Plot ID'si (örn: "Candlestick", "Volume", "RSI")</param>
+        public void SetPlotId(int plotIndex, string plotId)
+        {
+            lock (_lockObject)
+            {
+                _plotIds[plotIndex] = plotId ?? "Unknown";
+            }
+        }
+
+        /// <summary>
+        /// Belirtilen plot index'ine ID atar (integer ID)
+        /// </summary>
+        /// <param name="plotIndex">Plot indeksi</param>
+        /// <param name="plotId">Plot ID'si (integer)</param>
+        public void SetPlotId(int plotIndex, int plotId)
+        {
+            SetPlotId(plotIndex, plotId.ToString());
+        }
+
+        /// <summary>
+        /// Plot nesnesine ID atar (string ID)
+        /// </summary>
+        /// <param name="plot">Plot nesnesi</param>
+        /// <param name="plotId">Plot ID'si (string)</param>
+        public void SetPlotId(ScottPlot.Plot plot, string plotId)
+        {
+            lock (_lockObject)
+            {
+                if (_plotToIndex.TryGetValue(plot, out int plotIndex))
+                {
+                    SetPlotId(plotIndex, plotId);
+                }
+                else
+                {
+                    throw new ArgumentException("Plot nesnesi PlotManager'da bulunamadı.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Plot nesnesine ID atar (integer ID)
+        /// </summary>
+        /// <param name="plot">Plot nesnesi</param>
+        /// <param name="plotId">Plot ID'si (integer)</param>
+        public void SetPlotId(ScottPlot.Plot plot, int plotId)
+        {
+            SetPlotId(plot, plotId.ToString());
+        }
+
+        /// <summary>
+        /// Belirtilen plot index'inin ID'sini döndürür
+        /// </summary>
+        /// <param name="plotIndex">Plot indeksi</param>
+        /// <returns>Plot ID'si, bulunamazsa null</returns>
+        public string? GetPlotId(int plotIndex)
+        {
+            lock (_lockObject)
+            {
+                return _plotIds.TryGetValue(plotIndex, out string? plotId) ? plotId : null;
+            }
+        }
+
+        /// <summary>
+        /// Belirtilen ID'ye sahip plot'un index'ini döndürür
+        /// </summary>
+        /// <param name="plotId">Plot ID'si</param>
+        /// <returns>Plot index'i, bulunamazsa -1</returns>
+        public int GetPlotIndexById(string plotId)
+        {
+            lock (_lockObject)
+            {
+                foreach (var kvp in _plotIds)
+                {
+                    if (kvp.Value == plotId)
+                        return kvp.Key;
+                }
+                return -1;
+            }
+        }
+
+        /// <summary>
+        /// Belirtilen plot ID'sinin "Candlestick" olup olmadığını kontrol eder
+        /// </summary>
+        /// <param name="plotIndex">Plot indeksi</param>
+        /// <returns>Candlestick plot'u ise true</returns>
+        public bool IsCandlestickPlot(int plotIndex)
+        {
+            string? plotId = GetPlotId(plotIndex);
+            return plotId?.Equals("Candlestick", StringComparison.OrdinalIgnoreCase) == true;
         }
     }
 }
