@@ -12,8 +12,8 @@ namespace AlgoTradeWithScottPlot.Components
             }
             base.Dispose(disposing);
         }
-        private ScottPlot.WinForms.FormsPlot formsPlot;
         private HScrollBar hScrollBar1;
         private VScrollBar vScrollBar;
+        private ScottPlot.WinForms.FormsPlot formsPlot;
     }
 }

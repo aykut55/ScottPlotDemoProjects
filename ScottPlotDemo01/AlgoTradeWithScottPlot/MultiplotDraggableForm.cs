@@ -41,6 +41,7 @@ namespace AlgoTradeWithScottPlot
             btnAddRow.TabIndex = 1;
             btnAddRow.Text = "Add Plot";
             btnAddRow.UseVisualStyleBackColor = true;
+            btnAddRow.Click += btnAddRow_Click;
             // 
             // btnDeleteRow
             // 
@@ -174,6 +175,11 @@ namespace AlgoTradeWithScottPlot
 
                 formsPlot1.Refresh();
             };
+        }
+
+        private void btnAddRow_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

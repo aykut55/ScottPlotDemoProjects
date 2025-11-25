@@ -1,12 +1,42 @@
+using AlgoTradeWithScottPlot.Components;
+using OoplesFinance.StockIndicators.Enums;
 using ScottPlot;
+using ScottPlot.Colormaps;
+using ScottPlot.Plottables;
+using ScottPlot.WinForms;
+using System.Reflection.PortableExecutable;
+using System.Security.Cryptography;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Rebar;
+using Signal = ScottPlot.Plottables.Signal;
 
 namespace AlgoTradeWithScottPlot
 {
     public partial class Form1 : Form
     {
+        private PlotManager plotManager;
+        private ScottPlot.OHLC[]? ohlcData;
+        private double[]? volumeData;
+        private double[]? sma100;
+        private double[]? sma200;
+        private double[]? rsi;
+        private double[]? macdLine;
+        private double[]? signalLine;
+        private double[]? histogram;
+        private double[]? stochK;
+        private double[]? stochD;
+        private int[]? signals;
+        private double[]? entryPrices;
+        private double[]? exitPrices;
+        private double[]? unrealizedPnL;
+        private double[]? realizedPnL;
+        private double[]? cumulativePnL;
+        private double[]? balance;
+
         public Form1()
         {
             InitializeComponent();
+
+            plotManager = new PlotManager(); // Bu satırı ekleyin
 
             // Initialize any additional UI components if needed
             InitializeUIComponents();
@@ -986,12 +1016,12 @@ namespace AlgoTradeWithScottPlot
         private void button1_Click(object sender, EventArgs e)
         {
             // Generate 2M OHLC points
-            int pointCount = 2_000_000;
+            int pointCount = 2_000_000 * 0 + 2_000 * 1;
 
             statusLabel.Text = $"Generating {pointCount:N0} OHLC bars...";
             Application.DoEvents(); // UI güncellenmesi için
 
-            var ohlcData = DataGenerator.GenerateOHLCs(pointCount);
+            ohlcData = DataGenerator.GenerateOHLCs(pointCount);
 
             statusLabel.Text = $"Generated {ohlcData.Length:N0} OHLC bars | Calculating indicators...";
             Application.DoEvents();
@@ -1003,32 +1033,32 @@ namespace AlgoTradeWithScottPlot
             var lowPrices = ohlcData.Select(x => x.Low).ToArray();
 
             // Volume üret
-            var volumes = DataGenerator.GenerateVolume(pointCount, 1000000, 10000000);
+            volumeData = DataGenerator.GenerateVolume(pointCount, 1000000, 10000000);
 
             // SMA hesapla
-            var sma100 = DataGenerator.CalculateSMA(closePrices, 100);
-            var sma200 = DataGenerator.CalculateSMA(closePrices, 200);
+            sma100 = DataGenerator.CalculateSMA(closePrices, 100);
+            sma200 = DataGenerator.CalculateSMA(closePrices, 200);
 
             // RSI hesapla
-            var rsi = DataGenerator.CalculateRSI(closePrices, 14);
+            rsi = DataGenerator.CalculateRSI(closePrices, 14);
 
             // MACD hesapla
-            var (macdLine, signalLine, histogram) = DataGenerator.CalculateMACD(closePrices, 12, 26, 9);
+            (macdLine, signalLine, histogram) = DataGenerator.CalculateMACD(closePrices, 12, 26, 9);
 
             // Stochastic hesapla
-            var (stochK, stochD) = DataGenerator.CalculateStochastic(highPrices, lowPrices, closePrices, 14, 3, 3);
+            (stochK, stochD) = DataGenerator.CalculateStochastic(highPrices, lowPrices, closePrices, 14, 3, 3);
 
             statusLabel.Text = $"Calculating trading signals...";
             Application.DoEvents();
 
             // Trading sinyalleri üret (SMA100 ve SMA200 kesişimlerinden, %5 kar al, %3 zarar kes)
-            var (signals, entryPrices, exitPrices) = DataGenerator.CalculateTradingSignals(sma100, sma200, 5, -3);
+            (signals, entryPrices, exitPrices) = DataGenerator.CalculateTradingSignals(sma100, sma200, 5, -3);
 
             // PnL hesapla (3 ayrı değer: Anlık, Gerçekleşen, Kümülatif)
-            var (unrealizedPnL, realizedPnL, cumulativePnL) = DataGenerator.CalculatePnL(signals, entryPrices, exitPrices, closePrices);
+            (unrealizedPnL, realizedPnL, cumulativePnL) = DataGenerator.CalculatePnL(signals, entryPrices, exitPrices, closePrices);
 
             // Balance hesapla (Başlangıç sermayesi: 100,000) - Kümülatif PnL kullan
-            var balance = DataGenerator.CalculateBalance(100000, cumulativePnL);
+            balance = DataGenerator.CalculateBalance(100000, cumulativePnL);
 
             // Sonuçları göster
             int buySignals = signals.Count(s => s == 1);
@@ -1044,6 +1074,379 @@ namespace AlgoTradeWithScottPlot
                               $"Initial: $100,000 | Final: ${finalBalance:N2} | " +
                               $"Total PnL: ${totalPnL:N2} ({returnPercent:F2}%) | " +
                               $"Last Trade: ${lastTradeRealizedPnL:N2} | Open Position: ${currentUnrealizedPnL:N2}";
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            // Önce veri üret
+            button1_Click(sender, e);
+
+            plotManager.SetTradingChart(tradingChart);
+
+            plotManager.RemoveAllPlots();
+
+            // ===========================================
+            // PLOT 0: Candlestick (Price Chart)  
+            // ===========================================
+            var plot0 = plotManager.GetPlot(0);
+                        plotManager.AddPlotData(plot0, PlotType.Candlestick, ohlcData, 0);
+            plot0.Title("Price Chart (Candlestick)");
+            plot0.YLabel("Price");
+            plot0.Axes.AutoScale();
+
+            // ===========================================
+            // PLOT 1: Volume
+            // ===========================================
+            var plot1 = plotManager.AddPlot();
+            var volumePlottable = plotManager.AddPlotData(plot1, PlotType.Volume, volumeData, 0);
+
+            // Cast edip kullanın
+            if (volumePlottable is BarPlot volumeBars)
+            {
+                for (int i = 0; i < volumeBars.Bars.Count && i < ohlcData.Length; i++)
+                {
+                    // Close > Open ise yeşil, değilse kırmızı
+                    if (ohlcData[i].Close >= ohlcData[i].Open)
+                    {
+                        volumeBars.Bars[i].FillColor = ScottPlot.Colors.LimeGreen.WithAlpha(0.7);
+                    }
+                    else
+                    {
+                        volumeBars.Bars[i].FillColor = ScottPlot.Colors.Red.WithAlpha(0.7);
+                    }
+                }
+            }
+            plot1.Title("Volume");
+            plot1.YLabel("Volume");
+            plot1.Axes.AutoScale();
+
+
+            // ===========================================
+            // PLOT 2: Moving Averages
+            // ===========================================
+            var plot2 = plotManager.AddPlot();
+            var sma100Line = plotManager.AddPlotData(plot2, PlotType.Line, sma100, 0);
+            var sma200Line = plotManager.AddPlotData(plot2, PlotType.Line, sma200, 1);
+
+            // Renkleri ve özellikleri ayarla
+            if (sma100Line is Signal sma100Signal)
+            {
+                sma100Signal.Color = ScottPlot.Colors.Blue;
+                sma100Signal.LineWidth = 2;
+                sma100Signal.LegendText = "SMA(100)";
+            }
+
+            if (sma200Line is Signal sma200Signal)
+            {
+                sma200Signal.Color = ScottPlot.Colors.Orange;
+                sma200Signal.LineWidth = 2;
+                sma200Signal.LegendText = "SMA(200)";
+            }
+
+            // Plot 2 ayarları
+            plot2.Title("Moving Averages");
+            plot2.YLabel("Price");
+            plot2.Axes.AutoScale();
+            plot2.ShowLegend();
+
+
+
+            // ===========================================
+            // PLOT 3: RSI (Relative Strength Index)
+            // ===========================================
+            var plot3 = plotManager.AddPlot();
+
+            // RSI çizgisini PlotManager ile ekle
+            var rsiLine = plotManager.AddPlotData(plot3, PlotType.Line, rsi, 0);
+
+            // RSI referans çizgilerini PlotManager ile ekle
+            var hline30 = plotManager.AddPlotData(plot3, PlotType.HorizontalLine, 30.0, 1);
+            var hline70 = plotManager.AddPlotData(plot3, PlotType.HorizontalLine, 70.0, 2);
+
+            // RSI çizgisi özelliklerini ayarla
+            if (rsiLine is Signal rsiSignal)
+            {
+                rsiSignal.Color = ScottPlot.Colors.Blue;
+                rsiSignal.LineWidth = 2;
+                rsiSignal.LegendText = "RSI";
+            }
+
+            // Referans çizgileri özelliklerini ayarla
+            if (hline30 is HorizontalLine h30)
+            {
+                h30.LineColor = ScottPlot.Colors.Red;
+                h30.LineWidth = 1;
+                h30.LinePattern = ScottPlot.LinePattern.Dashed;
+            }
+
+            if (hline70 is HorizontalLine h70)
+            {
+                h70.LineColor = ScottPlot.Colors.Red;
+                h70.LineWidth = 1;
+                h70.LinePattern = ScottPlot.LinePattern.Dashed;
+            }
+
+            // Plot 3 ayarları
+            plot3.Title("RSI Indicator");
+            plot3.YLabel("RSI");
+            plot3.Axes.SetLimitsY(0, 100);
+            plot3.Axes.AutoScaleX();
+            plot3.ShowLegend();
+
+
+            // ===========================================
+            // PLOT 4: MACD (Moving Average Convergence Divergence)
+            // ===========================================
+            var plot4 = plotManager.AddPlot();
+
+            // PlotManager ile MACD verilerini ekle
+            var _macdLine = plotManager.AddPlotData(plot4, PlotType.Line, macdLine, 0);
+            var _signalLine = plotManager.AddPlotData(plot4, PlotType.Line, signalLine, 1);
+            var _histogram = plotManager.AddPlotData(plot4, PlotType.Bar, histogram, 2);
+            var zeroLine = plotManager.AddPlotData(plot4, PlotType.HorizontalLine, 0.0, 3);
+
+            // MACD line özelliklerini ayarla
+            if (_macdLine is Signal macdSignal)
+            {
+                macdSignal.Color = ScottPlot.Colors.Blue;
+                macdSignal.LineWidth = 2;
+                macdSignal.LegendText = "MACD";
+            }
+
+            // Signal line özelliklerini ayarla
+            if (_signalLine is Signal signalSignal)
+            {
+                signalSignal.Color = ScottPlot.Colors.Red;
+                signalSignal.LineWidth = 2;
+                signalSignal.LegendText = "Signal";
+            }
+
+            // Histogram özelliklerini ayarla
+            if (_histogram is BarPlot histogramBars)
+            {
+                for (int i = 0; i < histogramBars.Bars.Count; i++)
+                {
+                    histogramBars.Bars[i].FillColor = histogram[i] >= 0
+                        ? ScottPlot.Colors.Green.WithAlpha(0.5)
+                        : ScottPlot.Colors.Red.WithAlpha(0.5);
+                }
+            }
+
+            // Zero line özelliklerini ayarla
+            if (zeroLine is HorizontalLine zLine)
+            {
+                zLine.LineColor = ScottPlot.Colors.Gray;
+                zLine.LineWidth = 1;
+                zLine.LinePattern = ScottPlot.LinePattern.Dashed;
+            }
+
+            // Plot 4 ayarları
+            plot4.Title("MACD");
+            plot4.YLabel("MACD");
+            plot4.Axes.AutoScale();
+            plot4.ShowLegend();
+
+
+            // ===========================================
+            // PLOT 5: Stochastic Oscillator
+            // ===========================================
+            var plot5 = plotManager.AddPlot();
+
+            // PlotManager ile Stochastic verilerini ekle
+            var kLine = plotManager.AddPlotData(plot5, PlotType.Line, stochK, 0);
+            var dLine = plotManager.AddPlotData(plot5, PlotType.Line, stochD, 1);
+            var stochLine80 = plotManager.AddPlotData(plot5, PlotType.HorizontalLine, 80.0, 2);
+            var stochLine20 = plotManager.AddPlotData(plot5, PlotType.HorizontalLine, 20.0, 3);
+
+            // %K line özelliklerini ayarla
+            if (kLine is Signal kSignal)
+            {
+                kSignal.Color = ScottPlot.Colors.Blue;
+                kSignal.LineWidth = 2;
+                kSignal.LegendText = "%K";
+            }
+
+            // %D line özelliklerini ayarla
+            if (dLine is Signal dSignal)
+            {
+                dSignal.Color = ScottPlot.Colors.Red;
+                dSignal.LineWidth = 2;
+                dSignal.LegendText = "%D";
+            }
+
+            // Overbought line (80) özelliklerini ayarla
+            if (stochLine80 is HorizontalLine line80)
+            {
+                line80.LineColor = ScottPlot.Colors.Red;
+                line80.LineWidth = 1;
+                line80.LinePattern = ScottPlot.LinePattern.Dashed;
+            }
+
+            // Oversold line (20) özelliklerini ayarla
+            if (stochLine20 is HorizontalLine line20)
+            {
+                line20.LineColor = ScottPlot.Colors.Red;
+                line20.LineWidth = 1;
+                line20.LinePattern = ScottPlot.LinePattern.Dashed;
+            }
+
+            // Plot 5 ayarları
+            plot5.Title("Stochastic Oscillator");
+            plot5.YLabel("Stochastic");
+            plot5.Axes.SetLimitsY(0, 100);
+            plot5.Axes.AutoScaleX();
+            plot5.ShowLegend();
+
+/*
+            // ===========================================
+            // PLOT 6: Trading Signals (Buy/Sell)
+            // ===========================================
+            var plot6 = plotManager.AddPlot();
+            var signalsLine = plotManager.AddPlotData(plot6, PlotType.Line, signals, 0);
+
+
+            // Buy ve sell signal verilerini hazırla
+            List<double> buySignalX = new List<double>();
+            List<double> buySignalY = new List<double>();
+            List<double> sellSignalX = new List<double>();
+            List<double> sellSignalY = new List<double>();
+
+            for (int i = 0; i < signals.Length; i++)
+            {
+                if (signals[i] == 1) // Buy signal
+                {
+                    buySignalX.Add(i);
+                    buySignalY.Add(1); // Signal = 1 (Buy)
+                }
+                else if (signals[i] == -1) // Sell signal
+                {
+                    sellSignalX.Add(i);
+                    sellSignalY.Add(-1); // Signal = -1 (Sell)
+                }
+            }
+
+            // Buy signals PlotManager ile ekle
+            if (buySignalX.Count > 0)
+            {
+                var buySignalTuple = (buySignalX.ToArray(), buySignalY.ToArray());
+                var buyScatter = plotManager.AddPlotData(plot6, PlotType.Scatter, buySignalTuple, 0);
+                
+                if (buyScatter is ScottPlot.Plottables.Scatter buyScatterPlot)
+                {
+                    buyScatterPlot.Color = ScottPlot.Colors.Green;
+                    buyScatterPlot.MarkerSize = 10;
+                    buyScatterPlot.MarkerShape = ScottPlot.MarkerShape.FilledTriangleUp;
+                    buyScatterPlot.LegendText = "Buy";
+                }
+            }
+
+            // Sell signals PlotManager ile ekle
+            if (sellSignalX.Count > 0)
+            {
+                var sellSignalTuple = (sellSignalX.ToArray(), sellSignalY.ToArray());
+                var sellScatter = plotManager.AddPlotData(plot6, PlotType.Scatter, sellSignalTuple, 1);
+                
+                if (sellScatter is ScottPlot.Plottables.Scatter sellScatterPlot)
+                {
+                    sellScatterPlot.Color = ScottPlot.Colors.Red;
+                    sellScatterPlot.MarkerSize = 10;
+                    sellScatterPlot.MarkerShape = ScottPlot.MarkerShape.FilledTriangleDown;
+                    sellScatterPlot.LegendText = "Sell";
+                }
+            }
+
+            // Zero line PlotManager ile ekle
+            var signalZeroLine = plotManager.AddPlotData(plot6, PlotType.HorizontalLine, 0.0, 2);
+            if (signalZeroLine is HorizontalLine zLine)
+            {
+                zLine.LineColor = ScottPlot.Colors.Gray;
+                zLine.LineWidth = 1;
+            }
+
+            // Plot 6 ayarları
+            plot6.Title("Trading Signals");
+            plot6.YLabel("Signal");
+            plot6.Axes.SetLimitsY(-1.5, 1.5);
+            plot6.Axes.AutoScaleX();
+            plot6.ShowLegend();
+/*
+
+            // ===========================================
+            // PLOT 7: PnL (Profit and Loss)
+            // ===========================================
+            var plot7 = plotManager.AddPlot();
+
+            // PnL hesapla (3 ayrı değer: Anlık, Gerçekleşen, Kümülatif)
+            var (unrealizedPnL, realizedPnL, cumulativePnL) = DataGenerator.CalculatePnL(signals, entryPrices, exitPrices, ohlcData.Select(x => x.Close).ToArray());
+
+            // PnL line PlotManager ile ekle
+            var pnlLine = plotManager.AddPlotData(plot7, PlotType.Line, cumulativePnL, 0);
+            if (pnlLine is Signal pnlSignal)
+            {
+                pnlSignal.Color = ScottPlot.Colors.Blue;
+                pnlSignal.LineWidth = 2;
+                pnlSignal.LegendText = "Cumulative PnL";
+            }
+
+            // Zero line PlotManager ile ekle
+            var pnlZeroLine = plotManager.AddPlotData(plot7, PlotType.HorizontalLine, 0.0, 1);
+            if (pnlZeroLine is HorizontalLine pnlZLine)
+            {
+                pnlZLine.LineColor = ScottPlot.Colors.Gray;
+                pnlZLine.LineWidth = 1;
+                pnlZLine.LinePattern = ScottPlot.LinePattern.Dashed;
+            }
+
+            // Plot 7 ayarları
+            plot7.Title("Profit & Loss (PnL)");
+            plot7.YLabel("PnL");
+            plot7.Axes.AutoScale();
+            plot7.ShowLegend();
+
+
+
+            // ===========================================
+            // PLOT 8: Balance (Account Balance)
+            // ===========================================
+            var plot8 = plotManager.AddPlot();
+
+            // Balance hesapla (Başlangıç sermayesi: 100,000) - Kümülatif PnL kullan
+            var balance = DataGenerator.CalculateBalance(100000, cumulativePnL);
+
+            // Balance line PlotManager ile ekle
+            var balanceLine = plotManager.AddPlotData(plot8, PlotType.Line, balance, 0);
+            if (balanceLine is Signal balanceSignal)
+            {
+                balanceSignal.Color = ScottPlot.Colors.DarkGreen;
+                balanceSignal.LineWidth = 3;
+                balanceSignal.LegendText = "Account Balance";
+            }
+
+            // Initial balance reference line PlotManager ile ekle
+            double initialBalance = 100000;
+            var initialBalanceLine = plotManager.AddPlotData(plot8, PlotType.HorizontalLine, initialBalance, 1);
+            if (initialBalanceLine is HorizontalLine initBalLine)
+            {
+                initBalLine.LineColor = ScottPlot.Colors.Gray;
+                initBalLine.LineWidth = 1;
+                initBalLine.LinePattern = ScottPlot.LinePattern.Dashed;
+            }
+
+            // Plot 8 ayarları
+            plot8.Title("Account Balance");
+            plot8.YLabel("Balance ($)");
+            plot8.XLabel("Time (Bar Index)");
+            plot8.Axes.AutoScale();
+            plot8.ShowLegend();
+*/
+            // ===========================================
+            // Finalize Layout and Refresh
+            // ===========================================
+            plotManager.FinalizeLayout();
+
+            plotManager.Refresh();
+
+
         }
     }
 }

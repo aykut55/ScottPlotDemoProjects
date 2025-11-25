@@ -323,6 +323,7 @@
             button1980 = new Button();
             centerPanel = new Panel();
             tradingChart = new AlgoTradeWithScottPlot.Components.TradingChart();
+            button5 = new Button();
             mainMenu.SuspendLayout();
             mainToolStrip.SuspendLayout();
             statusBar.SuspendLayout();
@@ -1304,6 +1305,7 @@
             // 
             rightPanel.BackColor = Color.LightCoral;
             rightPanel.BorderStyle = BorderStyle.FixedSingle;
+            rightPanel.Controls.Add(button5);
             rightPanel.Controls.Add(button1);
             rightPanel.Controls.Add(button1979);
             rightPanel.Controls.Add(button1980);
@@ -1363,6 +1365,16 @@
             tradingChart.Size = new Size(613, 466);
             tradingChart.TabIndex = 0;
             // 
+            // button5
+            // 
+            button5.Location = new Point(5, 130);
+            button5.Name = "button5";
+            button5.Size = new Size(75, 23);
+            button5.TabIndex = 3;
+            button5.Text = "button5";
+            button5.UseVisualStyleBackColor = true;
+            button5.Click += button5_Click;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -1409,5 +1421,6 @@
         private Button button1980;
         private Button button1979;
         private Button button1;
+        private Button button5;
     }
 }
