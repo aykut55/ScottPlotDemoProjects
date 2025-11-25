@@ -1613,6 +1613,42 @@ namespace AlgoTradeWithScottPlot
                 Cursor = customLayout.GetDivider(e.Y) is not null ? Cursors.SizeNS : Cursors.Default;
             };
 
+            // ===================================================================
+            // Mouse Wheel - Zoom (scrollbar'ı etkilemesin)
+            // ===================================================================
+            tradingChart.Plot.MouseWheel += (s, e) =>
+            {
+                // Mouse wheel ile zoom yap
+                double zoomFactor = e.Delta > 0 ? 0.9 : 1.1;  // Delta > 0 = zoom in, Delta < 0 = zoom out
+
+                // Mouse'un üzerinde olduğu plot'u bul
+                var mousePixel = new ScottPlot.Pixel(e.X, e.Y);
+
+                // Tüm plotlarda zoom yap (X ekseni shared olduğu için)
+                foreach (var plot in tradingChart.Plot.Multiplot.GetPlots())
+                {
+                    var currentLimits = plot.Axes.GetLimits();
+
+                    // X ekseninde zoom (tüm plotlarda aynı)
+                    double centerX = (currentLimits.Left + currentLimits.Right) / 2;
+                    double spanX = (currentLimits.Right - currentLimits.Left) * zoomFactor;
+
+                    // Y ekseninde zoom (her plot kendi Y ekseninde)
+                    double centerY = (currentLimits.Bottom + currentLimits.Top) / 2;
+                    double spanY = (currentLimits.Top - currentLimits.Bottom) * zoomFactor;
+
+                    plot.Axes.SetLimits(
+                        centerX - spanX / 2, centerX + spanX / 2,
+                        centerY - spanY / 2, centerY + spanY / 2
+                    );
+                }
+
+                tradingChart.Plot.Refresh();
+
+                // Event'i handle et - scrollbar'a gitmesin
+                ((System.Windows.Forms.HandledMouseEventArgs)e).Handled = true;
+            };
+
             // TradingChart resize event'i ekle - form büyüdüğünde FormsPlot genişliğini güncelle
             tradingChart.Resize += (s, ev) =>
             {
