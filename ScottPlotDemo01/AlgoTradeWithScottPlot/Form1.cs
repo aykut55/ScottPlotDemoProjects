@@ -1081,6 +1081,13 @@ namespace AlgoTradeWithScottPlot
         private bool isMouseDown = false;
         private Point mouseDownPoint;
         private MouseButtons mouseDownButton;
+        private DateTime lastRefreshTime = DateTime.MinValue;
+        
+        // Interaction flags for performance optimization
+        private bool isDragging = false;
+        private bool isZooming = false;
+        private bool isPanning = false;
+        private bool isDividerDrag = false;
 
         private void OnPlotMouseDown(object? sender, MouseEventArgs e)
         {
@@ -1104,7 +1111,11 @@ namespace AlgoTradeWithScottPlot
                 }
             }
 
+            // Reset all flags
             isMouseDown = false;
+            isDragging = false;
+            isPanning = false;
+            isZooming = false;
         }
 
         private void OnPlotMouseMove(object? sender, MouseEventArgs e)
@@ -1114,11 +1125,38 @@ namespace AlgoTradeWithScottPlot
 
             if (isMouseDown)
             {
-                OnPlotDragging(mouseDownPoint, new Point(e.X, e.Y), mouseDownButton);
+                // Drag başladığında flag'i set et
+                if (!isDragging)
+                {
+                    var dragDistance = Math.Sqrt(Math.Pow(e.X - mouseDownPoint.X, 2) + Math.Pow(e.Y - mouseDownPoint.Y, 2));
+                    if (dragDistance > 3) // Minimum drag threshold
+                    {
+                        isDragging = true;
+                        if (mouseDownButton == MouseButtons.Left)
+                        {
+                            isPanning = true;
+                        }
+                    }
+                }
+
+                if (isDragging)
+                {
+                    OnPlotDragging(mouseDownPoint, new Point(e.X, e.Y), mouseDownButton);
+                    // Dragging sırasında crosshair'i gizle
+                    return; 
+                }
             }
 
-            // Crosshair güncelleme
-            OnCrosshairMove(plotIndex, coords);
+            // Crosshair güncelleme - sadece etkileşim yokken ve throttle ile
+            if (!isDragging && !isZooming && !isPanning && !isDividerDrag)
+            {
+                var now = DateTime.Now;
+                if ((now - lastRefreshTime).TotalMilliseconds > 16) // 60 FPS limit
+                {
+                    OnCrosshairMove(plotIndex, coords);
+                    lastRefreshTime = now;
+                }
+            }
         }
 
         private void OnPlotMouseEnter(object? sender, EventArgs e)
@@ -1139,7 +1177,13 @@ namespace AlgoTradeWithScottPlot
             
             System.Diagnostics.Debug.WriteLine($"Plot MouseWheel - Index: {plotIndex}, Direction: {zoomDirection}, Delta: {e.Delta}");
             
+            // Zoom flag'ini set et
+            isZooming = true;
+            
             OnPlotZoom(plotIndex, e.Delta > 0, new Point(e.X, e.Y));
+            
+            // Zoom işlemi tamamlandıktan sonra flag'i reset et (kısa delay ile)
+            Task.Delay(100).ContinueWith(_ => isZooming = false);
         }
 
         private void OnPlotDragging(Point startPoint, Point currentPoint, MouseButtons button)
@@ -1384,6 +1428,12 @@ namespace AlgoTradeWithScottPlot
 
         private void OnCrosshairMove(int plotIndex, ScottPlot.Coordinates coords)
         {
+            // Eğer herhangi bir etkileşim aktifse crosshair güncelleme
+            if (isDragging || isZooming || isPanning || isDividerDrag)
+            {
+                return; // Skip crosshair update during interactions
+            }
+            
             // Crosshair position güncellemesi (mevcut crosshair sistemine entegre)
             // System.Diagnostics.Debug.WriteLine($"Crosshair Move - Plot: {plotIndex}, Coords: ({coords.X:F2}, {coords.Y:F2})");
         }
@@ -2159,6 +2209,12 @@ namespace AlgoTradeWithScottPlot
             {
                 dividerBeingDragged = customLayout.GetDivider(e.Y);
                 tradingChart.Plot.UserInputProcessor.IsEnabled = dividerBeingDragged is null;
+                
+                // Divider drag flag'ini set et
+                if (dividerBeingDragged is not null)
+                {
+                    isDividerDrag = true;
+                }
             };
 
             tradingChart.Plot.MouseUp += (s, e) =>
@@ -2168,6 +2224,7 @@ namespace AlgoTradeWithScottPlot
                     dividerBeingDragged = null;
                     tradingChart.Plot.UserInputProcessor.IsEnabled = true;
                 }
+                isDividerDrag = false;
             };
 
             tradingChart.Plot.MouseMove += (s, e) =>
