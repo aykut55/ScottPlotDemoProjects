@@ -40,6 +40,9 @@ namespace AlgoTradeWithScottPlot
 
             // Initialize any additional UI components if needed
             InitializeUIComponents();
+            
+            // Initialize plot event handling system
+            InitializePlotEvents();
         }
 
         private void InitializeUIComponents()
@@ -1003,6 +1006,568 @@ namespace AlgoTradeWithScottPlot
         {
             documentationToolStripMenuItem_Click(sender, e);
         }
+
+        #endregion
+
+        #region Plot Event Handling System
+
+        /// <summary>
+        /// Tüm plot event'lerini initialize eder
+        /// </summary>
+        private void InitializePlotEvents()
+        {
+            InitializeMouseEvents();
+            InitializeKeyboardEvents();
+            InitializePlotLifecycleEvents();
+            InitializeTradingSpecificEvents();
+        }
+
+        #region Mouse Events
+
+        /// <summary>
+        /// Mouse event'lerini initialize eder
+        /// </summary>
+        private void InitializeMouseEvents()
+        {
+            if (tradingChart?.Plot == null) return;
+
+            tradingChart.Plot.MouseClick += OnPlotMouseClick;
+            tradingChart.Plot.MouseDoubleClick += OnPlotMouseDoubleClick;
+            tradingChart.Plot.MouseDown += OnPlotMouseDown;
+            tradingChart.Plot.MouseUp += OnPlotMouseUp;
+            tradingChart.Plot.MouseMove += OnPlotMouseMove;
+            tradingChart.Plot.MouseEnter += OnPlotMouseEnter;
+            tradingChart.Plot.MouseLeave += OnPlotMouseLeave;
+            tradingChart.Plot.MouseWheel += OnPlotMouseWheel;
+        }
+
+        private void OnPlotMouseClick(object? sender, MouseEventArgs e)
+        {
+            var plotIndex = GetPlotIndexAtPosition(e.X, e.Y);
+            var plotId = plotManager.GetPlotId(plotIndex);
+            var coords = GetCoordinatesAtPosition(e.X, e.Y, plotIndex);
+
+            System.Diagnostics.Debug.WriteLine($"Plot Click - Index: {plotIndex}, ID: {plotId}, Button: {e.Button}, Coords: ({coords.X:F2}, {coords.Y:F2})");
+
+            // Plot tipine göre özel işlemler
+            switch (plotId)
+            {
+                case "0": // Candlestick
+                    OnCandlestickClick(coords, e.Button);
+                    break;
+                default:
+                    OnIndicatorClick(plotIndex, coords, e.Button);
+                    break;
+            }
+        }
+
+        private void OnPlotMouseDoubleClick(object? sender, MouseEventArgs e)
+        {
+            var plotIndex = GetPlotIndexAtPosition(e.X, e.Y);
+            var plotId = plotManager.GetPlotId(plotIndex);
+
+            System.Diagnostics.Debug.WriteLine($"Plot DoubleClick - Index: {plotIndex}, ID: {plotId}, Button: {e.Button}");
+
+            if (e.Button == MouseButtons.Middle)
+            {
+                OnMiddleDoubleClick(plotIndex);
+            }
+            else if (e.Button == MouseButtons.Left)
+            {
+                OnLeftDoubleClick(plotIndex);
+            }
+        }
+
+        private bool isMouseDown = false;
+        private Point mouseDownPoint;
+        private MouseButtons mouseDownButton;
+
+        private void OnPlotMouseDown(object? sender, MouseEventArgs e)
+        {
+            isMouseDown = true;
+            mouseDownPoint = new Point(e.X, e.Y);
+            mouseDownButton = e.Button;
+
+            var plotIndex = GetPlotIndexAtPosition(e.X, e.Y);
+            System.Diagnostics.Debug.WriteLine($"Plot MouseDown - Index: {plotIndex}, Button: {e.Button}, Position: ({e.X}, {e.Y})");
+        }
+
+        private void OnPlotMouseUp(object? sender, MouseEventArgs e)
+        {
+            if (isMouseDown)
+            {
+                var dragDistance = Math.Sqrt(Math.Pow(e.X - mouseDownPoint.X, 2) + Math.Pow(e.Y - mouseDownPoint.Y, 2));
+                
+                if (dragDistance > 5) // Minimum drag distance
+                {
+                    OnPlotDragEnd(mouseDownPoint, new Point(e.X, e.Y), mouseDownButton);
+                }
+            }
+
+            isMouseDown = false;
+        }
+
+        private void OnPlotMouseMove(object? sender, MouseEventArgs e)
+        {
+            var plotIndex = GetPlotIndexAtPosition(e.X, e.Y);
+            var coords = GetCoordinatesAtPosition(e.X, e.Y, plotIndex);
+
+            if (isMouseDown)
+            {
+                OnPlotDragging(mouseDownPoint, new Point(e.X, e.Y), mouseDownButton);
+            }
+
+            // Crosshair güncelleme
+            OnCrosshairMove(plotIndex, coords);
+        }
+
+        private void OnPlotMouseEnter(object? sender, EventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine("Plot MouseEnter");
+        }
+
+        private void OnPlotMouseLeave(object? sender, EventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine("Plot MouseLeave");
+            OnCrosshairMove(-1, new ScottPlot.Coordinates(0, 0)); // Hide crosshair
+        }
+
+        private void OnPlotMouseWheel(object? sender, MouseEventArgs e)
+        {
+            var plotIndex = GetPlotIndexAtPosition(e.X, e.Y);
+            var zoomDirection = e.Delta > 0 ? "In" : "Out";
+            
+            System.Diagnostics.Debug.WriteLine($"Plot MouseWheel - Index: {plotIndex}, Direction: {zoomDirection}, Delta: {e.Delta}");
+            
+            OnPlotZoom(plotIndex, e.Delta > 0, new Point(e.X, e.Y));
+        }
+
+        private void OnPlotDragging(Point startPoint, Point currentPoint, MouseButtons button)
+        {
+            var deltaX = currentPoint.X - startPoint.X;
+            var deltaY = currentPoint.Y - startPoint.Y;
+
+            switch (button)
+            {
+                case MouseButtons.Left:
+                    OnLeftDrag(startPoint, currentPoint, deltaX, deltaY);
+                    break;
+                case MouseButtons.Right:
+                    OnRightDrag(startPoint, currentPoint, deltaX, deltaY);
+                    break;
+                case MouseButtons.Middle:
+                    OnMiddleDrag(startPoint, currentPoint, deltaX, deltaY);
+                    break;
+            }
+        }
+
+        private void OnPlotDragEnd(Point startPoint, Point endPoint, MouseButtons button)
+        {
+            System.Diagnostics.Debug.WriteLine($"Plot DragEnd - Button: {button}, Start: ({startPoint.X}, {startPoint.Y}), End: ({endPoint.X}, {endPoint.Y})");
+        }
+
+        private void OnLeftDrag(Point start, Point current, int deltaX, int deltaY)
+        {
+            // Sol drag: Pan işlemi (varsayılan ScottPlot davranışı)
+            System.Diagnostics.Debug.WriteLine($"Left Drag - Delta: ({deltaX}, {deltaY})");
+        }
+
+        private void OnRightDrag(Point start, Point current, int deltaX, int deltaY)
+        {
+            // Sağ drag: Özel işlem (örn: zoom rectangle)
+            System.Diagnostics.Debug.WriteLine($"Right Drag - Delta: ({deltaX}, {deltaY})");
+        }
+
+        private void OnMiddleDrag(Point start, Point current, int deltaX, int deltaY)
+        {
+            // Orta drag: Zoom rectangle veya özel işlem
+            System.Diagnostics.Debug.WriteLine($"Middle Drag - Delta: ({deltaX}, {deltaY})");
+        }
+
+        private void OnMiddleDoubleClick(int plotIndex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Middle DoubleClick - Plot: {plotIndex} - Auto Scale");
+            // Auto scale işlemi
+            if (plotIndex >= 0 && plotIndex < plotManager.Count)
+            {
+                var plot = plotManager.GetPlot(plotIndex);
+                plot.Axes.AutoScale();
+                plotManager.Refresh();
+            }
+        }
+
+        private void OnLeftDoubleClick(int plotIndex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Left DoubleClick - Plot: {plotIndex}");
+            // Özel çift tıklama işlemi
+        }
+
+        #endregion
+
+        #region Keyboard Events
+
+        /// <summary>
+        /// Keyboard event'lerini initialize eder
+        /// </summary>
+        private void InitializeKeyboardEvents()
+        {
+            this.KeyPreview = true; // Form'un key event'leri yakalaması için
+            this.KeyDown += OnFormKeyDown;
+            this.KeyUp += OnFormKeyUp;
+            this.KeyPress += OnFormKeyPress;
+        }
+
+        private void OnFormKeyDown(object? sender, KeyEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine($"Key Down: {e.KeyCode}, Ctrl: {e.Control}, Shift: {e.Shift}, Alt: {e.Alt}");
+
+            // Hotkey kombinasyonları
+            if (e.Control)
+            {
+                switch (e.KeyCode)
+                {
+                    case Keys.C:
+                        OnCopyData();
+                        break;
+                    case Keys.V:
+                        OnPasteData();
+                        break;
+                    case Keys.S:
+                        OnSaveChart();
+                        break;
+                    case Keys.O:
+                        OnOpenChart();
+                        break;
+                    case Keys.Z:
+                        OnUndo();
+                        break;
+                    case Keys.Y:
+                        OnRedo();
+                        break;
+                }
+            }
+            else
+            {
+                switch (e.KeyCode)
+                {
+                    case Keys.Delete:
+                        OnDeleteSelected();
+                        break;
+                    case Keys.Escape:
+                        OnEscape();
+                        break;
+                    case Keys.Space:
+                        OnSpacePressed();
+                        break;
+                    case Keys.F1:
+                        OnShowHelp();
+                        break;
+                    case Keys.F5:
+                        OnRefreshData();
+                        break;
+                    case Keys.Left:
+                        OnNavigateLeft();
+                        break;
+                    case Keys.Right:
+                        OnNavigateRight();
+                        break;
+                    case Keys.Up:
+                        OnNavigateUp();
+                        break;
+                    case Keys.Down:
+                        OnNavigateDown();
+                        break;
+                }
+            }
+        }
+
+        private void OnFormKeyUp(object? sender, KeyEventArgs e)
+        {
+            // Key release işlemleri
+        }
+
+        private void OnFormKeyPress(object? sender, KeyPressEventArgs e)
+        {
+            // Karakter girişi işlemleri
+        }
+
+        #endregion
+
+        #region Plot Lifecycle Events
+
+        /// <summary>
+        /// Plot lifecycle event'lerini initialize eder
+        /// </summary>
+        private void InitializePlotLifecycleEvents()
+        {
+            // PlotManager event'leri dinlenebilir
+        }
+
+        private void OnPlotCreated(int plotIndex, string plotId)
+        {
+            System.Diagnostics.Debug.WriteLine($"Plot Created - Index: {plotIndex}, ID: {plotId}");
+        }
+
+        private void OnPlotDestroyed(int plotIndex, string plotId)
+        {
+            System.Diagnostics.Debug.WriteLine($"Plot Destroyed - Index: {plotIndex}, ID: {plotId}");
+        }
+
+        private void OnDataAdded(int plotIndex, PlotType plotType, object data)
+        {
+            System.Diagnostics.Debug.WriteLine($"Data Added - Plot: {plotIndex}, Type: {plotType}");
+        }
+
+        private void OnDataRemoved(int plotIndex, PlotType plotType)
+        {
+            System.Diagnostics.Debug.WriteLine($"Data Removed - Plot: {plotIndex}, Type: {plotType}");
+        }
+
+        private void OnDataUpdated(int plotIndex, PlotType plotType, object newData)
+        {
+            System.Diagnostics.Debug.WriteLine($"Data Updated - Plot: {plotIndex}, Type: {plotType}");
+        }
+
+        private void OnPlotRefresh(int plotIndex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Plot Refresh - Index: {plotIndex}");
+        }
+
+        private void OnPlotResize(int plotIndex, Size newSize)
+        {
+            System.Diagnostics.Debug.WriteLine($"Plot Resize - Index: {plotIndex}, Size: {newSize}");
+        }
+
+        private void OnAxesChanged(int plotIndex, ScottPlot.AxisLimits newLimits)
+        {
+            System.Diagnostics.Debug.WriteLine($"Axes Changed - Plot: {plotIndex}, Limits: ({newLimits.Left:F2}, {newLimits.Right:F2}, {newLimits.Bottom:F2}, {newLimits.Top:F2})");
+        }
+
+        private void OnPlotZoom(int plotIndex, bool zoomIn, Point mousePosition)
+        {
+            System.Diagnostics.Debug.WriteLine($"Plot Zoom - Index: {plotIndex}, ZoomIn: {zoomIn}, Mouse: ({mousePosition.X}, {mousePosition.Y})");
+        }
+
+        #endregion
+
+        #region Trading Specific Events
+
+        /// <summary>
+        /// Trading specific event'leri initialize eder
+        /// </summary>
+        private void InitializeTradingSpecificEvents()
+        {
+            // Trading chart'a özgü event'ler
+        }
+
+        private void OnCandlestickClick(ScottPlot.Coordinates coords, MouseButtons button)
+        {
+            System.Diagnostics.Debug.WriteLine($"Candlestick Click - Time: {coords.X:F2}, Price: {coords.Y:F2}, Button: {button}");
+            
+            // OHLC verisinden en yakın mum bulma
+            if (ohlcData != null)
+            {
+                int candleIndex = (int)Math.Round(coords.X);
+                if (candleIndex >= 0 && candleIndex < ohlcData.Length)
+                {
+                    var candle = ohlcData[candleIndex];
+                    System.Diagnostics.Debug.WriteLine($"Candle {candleIndex}: O:{candle.Open:F2}, H:{candle.High:F2}, L:{candle.Low:F2}, C:{candle.Close:F2}");
+                }
+            }
+        }
+
+        private void OnIndicatorClick(int plotIndex, ScottPlot.Coordinates coords, MouseButtons button)
+        {
+            var plotId = plotManager.GetPlotId(plotIndex);
+            System.Diagnostics.Debug.WriteLine($"Indicator Click - Plot: {plotId}, Coords: ({coords.X:F2}, {coords.Y:F2}), Button: {button}");
+        }
+
+        private void OnCrosshairMove(int plotIndex, ScottPlot.Coordinates coords)
+        {
+            // Crosshair position güncellemesi (mevcut crosshair sistemine entegre)
+            // System.Diagnostics.Debug.WriteLine($"Crosshair Move - Plot: {plotIndex}, Coords: ({coords.X:F2}, {coords.Y:F2})");
+        }
+
+        private void OnTimeframeChange(string oldTimeframe, string newTimeframe)
+        {
+            System.Diagnostics.Debug.WriteLine($"Timeframe Change - From: {oldTimeframe}, To: {newTimeframe}");
+        }
+
+        private void OnMarketDataUpdate(string symbol, double price, DateTime timestamp)
+        {
+            System.Diagnostics.Debug.WriteLine($"Market Data Update - Symbol: {symbol}, Price: {price:F2}, Time: {timestamp}");
+        }
+
+        private void OnOrderPlaced(string orderType, double price, double quantity)
+        {
+            System.Diagnostics.Debug.WriteLine($"Order Placed - Type: {orderType}, Price: {price:F2}, Quantity: {quantity}");
+        }
+
+        #endregion
+
+        #region Hotkey Actions
+
+        private void OnCopyData()
+        {
+            System.Diagnostics.Debug.WriteLine("Copy Data - Ctrl+C");
+            // Seçili veriyi clipboard'a kopyala
+        }
+
+        private void OnPasteData()
+        {
+            System.Diagnostics.Debug.WriteLine("Paste Data - Ctrl+V");
+            // Clipboard'dan veri yapıştır
+        }
+
+        private void OnSaveChart()
+        {
+            System.Diagnostics.Debug.WriteLine("Save Chart - Ctrl+S");
+            // Chart'ı dosyaya kaydet
+        }
+
+        private void OnOpenChart()
+        {
+            System.Diagnostics.Debug.WriteLine("Open Chart - Ctrl+O");
+            // Chart dosyası aç
+        }
+
+        private void OnUndo()
+        {
+            System.Diagnostics.Debug.WriteLine("Undo - Ctrl+Z");
+            // Son işlemi geri al
+        }
+
+        private void OnRedo()
+        {
+            System.Diagnostics.Debug.WriteLine("Redo - Ctrl+Y");
+            // İşlemi yeniden yap
+        }
+
+        private void OnDeleteSelected()
+        {
+            System.Diagnostics.Debug.WriteLine("Delete Selected - Delete Key");
+            // Seçili öğeleri sil
+        }
+
+        private void OnEscape()
+        {
+            System.Diagnostics.Debug.WriteLine("Escape - ESC");
+            // Mevcut işlemi iptal et
+        }
+
+        private void OnSpacePressed()
+        {
+            System.Diagnostics.Debug.WriteLine("Space Pressed - Space Key");
+            // Özel işlem (örn: pause/resume)
+        }
+
+        private void OnShowHelp()
+        {
+            System.Diagnostics.Debug.WriteLine("Show Help - F1");
+            // Yardım penceresini aç
+        }
+
+        private void OnRefreshData()
+        {
+            System.Diagnostics.Debug.WriteLine("Refresh Data - F5");
+            // Veriyi yenile
+        }
+
+        private void OnNavigateLeft()
+        {
+            System.Diagnostics.Debug.WriteLine("Navigate Left - Left Arrow");
+            // Sol navigasyon
+        }
+
+        private void OnNavigateRight()
+        {
+            System.Diagnostics.Debug.WriteLine("Navigate Right - Right Arrow");
+            // Sağ navigasyon
+        }
+
+        private void OnNavigateUp()
+        {
+            System.Diagnostics.Debug.WriteLine("Navigate Up - Up Arrow");
+            // Yukarı navigasyon
+        }
+
+        private void OnNavigateDown()
+        {
+            System.Diagnostics.Debug.WriteLine("Navigate Down - Down Arrow");
+            // Aşağı navigasyon
+        }
+
+        #endregion
+
+        #region Helper Methods
+
+        /// <summary>
+        /// Pixel pozisyonundan plot index'ini bulur
+        /// </summary>
+        private int GetPlotIndexAtPosition(int x, int y)
+        {
+            if (tradingChart?.Plot?.Multiplot == null) return -1;
+
+            var plots = tradingChart.Plot.Multiplot.GetPlots();
+            for (int i = 0; i < plots.Length; i++)
+            {
+                var plotRect = plots[i].RenderManager.LastRender.DataRect;
+                if (x >= plotRect.Left && x <= plotRect.Right && y >= plotRect.Top && y <= plotRect.Bottom)
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        /// <summary>
+        /// Pixel pozisyonunu plot koordinatlarına çevirir
+        /// </summary>
+        private ScottPlot.Coordinates GetCoordinatesAtPosition(int x, int y, int plotIndex)
+        {
+            if (plotIndex < 0 || tradingChart?.Plot?.Multiplot == null) 
+                return new ScottPlot.Coordinates(0, 0);
+
+            var plots = tradingChart.Plot.Multiplot.GetPlots();
+            if (plotIndex >= plots.Length) 
+                return new ScottPlot.Coordinates(0, 0);
+
+            return plots[plotIndex].GetCoordinates(new ScottPlot.Pixel(x, y));
+        }
+
+        /// <summary>
+        /// Belirtilen koordinattaki OHLC verisini bulur
+        /// </summary>
+        private ScottPlot.OHLC? GetOHLCAtCoordinate(double x)
+        {
+            if (ohlcData == null) return null;
+
+            int index = (int)Math.Round(x);
+            if (index >= 0 && index < ohlcData.Length)
+                return ohlcData[index];
+
+            return null;
+        }
+
+        /// <summary>
+        /// Plot event'lerini temizler
+        /// </summary>
+        private void CleanupPlotEvents()
+        {
+            if (tradingChart?.Plot != null)
+            {
+                tradingChart.Plot.MouseClick -= OnPlotMouseClick;
+                tradingChart.Plot.MouseDoubleClick -= OnPlotMouseDoubleClick;
+                tradingChart.Plot.MouseDown -= OnPlotMouseDown;
+                tradingChart.Plot.MouseUp -= OnPlotMouseUp;
+                tradingChart.Plot.MouseMove -= OnPlotMouseMove;
+                tradingChart.Plot.MouseEnter -= OnPlotMouseEnter;
+                tradingChart.Plot.MouseLeave -= OnPlotMouseLeave;
+                tradingChart.Plot.MouseWheel -= OnPlotMouseWheel;
+            }
+        }
+
+        #endregion
 
         #endregion
 
