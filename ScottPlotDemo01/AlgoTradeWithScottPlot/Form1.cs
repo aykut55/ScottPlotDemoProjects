@@ -1019,7 +1019,7 @@ namespace AlgoTradeWithScottPlot
         private void button1_Click(object sender, EventArgs e)
         {
             // Generate 2M OHLC points
-            int pointCount = 2_000_000 * 0 + 2_000 * 1;
+            int pointCount = 2_000_000 * 0 + 200_000 * 0 + 20_000 * 1 + 2_000 * 0;
 
             statusLabel.Text = $"Generating {pointCount:N0} OHLC bars...";
             Application.DoEvents(); // UI güncellenmesi için
