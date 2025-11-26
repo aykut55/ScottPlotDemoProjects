@@ -1088,6 +1088,16 @@ namespace AlgoTradeWithScottPlot
         private bool isZooming = false;
         private bool isPanning = false;
         private bool isDividerDrag = false;
+        private bool isUpdatingAxisSync = false;
+        
+        // Divider drag state
+        private int? dividerBeingDragged = null;
+        private ScottPlot.MultiplotLayouts.DraggableRows? customLayout = null;
+        
+        // Crosshair list for all plots
+        private List<ScottPlot.Plottables.Crosshair> crosshairs = new List<ScottPlot.Plottables.Crosshair>();
+        private bool useCrossHairAllPlots = true;
+        private ScottPlot.Plot[] allPlots = new ScottPlot.Plot[0];
 
         private void OnPlotMouseDown(object? sender, MouseEventArgs e)
         {
@@ -1246,14 +1256,254 @@ namespace AlgoTradeWithScottPlot
             // Özel çift tıklama işlemi
         }
 
-        #endregion
+        /// <summary>
+        /// TradingChart mouse wheel event handler - zoom functionality
+        /// </summary>
+        private void TradingChartPlotMouseWheel(object? sender, MouseEventArgs e)
+        {
+            // Mouse wheel ile zoom yap
+            double zoomFactor = e.Delta > 0 ? 0.9 : 1.1;  // Delta > 0 = zoom in, Delta < 0 = zoom out
 
-        #region Keyboard Events
+            // Mouse'un üzerinde olduğu plot'u bul
+            var mousePixel = new ScottPlot.Pixel(e.X, e.Y);
+
+            // Tüm plotlarda zoom yap (X ekseni shared olduğu için)
+            foreach (var plot in tradingChart.Plot.Multiplot.GetPlots())
+            {
+                var currentLimits = plot.Axes.GetLimits();
+
+                // X ekseninde zoom (tüm plotlarda aynı)
+                double centerX = (currentLimits.Left + currentLimits.Right) / 2;
+                double spanX = (currentLimits.Right - currentLimits.Left) * zoomFactor;
+
+                // Y ekseninde zoom (her plot kendi Y ekseninde)
+                double centerY = (currentLimits.Bottom + currentLimits.Top) / 2;
+                double spanY = (currentLimits.Top - currentLimits.Bottom) * zoomFactor;
+
+                plot.Axes.SetLimits(
+                    centerX - spanX / 2, centerX + spanX / 2,
+                    centerY - spanY / 2, centerY + spanY / 2
+                );
+            }
+
+            tradingChart.Plot.Refresh();
+
+            // Event'i handle et - scrollbar'a gitmesin
+            ((System.Windows.Forms.HandledMouseEventArgs)e).Handled = true;
+        }
 
         /// <summary>
-        /// Keyboard event'lerini initialize eder
+        /// TradingChart resize event handler - multiplot genişlik ayarı
         /// </summary>
-        private void InitializeKeyboardEvents()
+        private void TradingChartResize(object? sender, EventArgs e)
+        {
+            // Multiplot aktif ise genişliği güncelle
+            try
+            {
+                if (tradingChart.Plot.Dock == DockStyle.None && tradingChart.Plot.Height > 1000) // Multiplot modunda
+                {
+                    // Reflection ile panelCenter'ı al
+                    var panelCenterProp = tradingChart.GetType().GetProperty("panelCenter", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    Panel? panelCenterObj = panelCenterProp?.GetValue(tradingChart) as Panel;
+
+                    if (panelCenterObj != null)
+                    {
+                        int resizedWidth = panelCenterObj.ClientSize.Width;
+
+                        // LeftPanel visible ise ekstra düzeltme yap
+                        if (tradingChart.LeftPanel.Visible)
+                        {
+                            resizedWidth -= tradingChart.LeftPanel.Width + 5;
+                        }
+
+                        // RightPanel visible ise ekstra düzeltme yap
+                        if (tradingChart.RightPanel.Visible)
+                        {
+                            resizedWidth -= tradingChart.RightPanel.Width + 5;
+                        }
+
+                        // TopPanel visible ise ekstra düzeltme
+                        if (tradingChart.TopPanel.Visible)
+                        {
+                            resizedWidth -= 5;
+                        }
+
+                        // Scrollbar ve plot margin'leri için ekstra boşluk (axes lock size kullanıldığı için daha az gerekli)
+                        resizedWidth -= 20;
+
+                        tradingChart.Plot.Width = resizedWidth;
+                    }
+                    else
+                    {
+                        tradingChart.Plot.Width = tradingChart.ClientSize.Width - SystemInformation.VerticalScrollBarWidth - 20;
+                    }
+                }
+            }
+            catch { }
+        }
+
+        /// <summary>
+        /// TradingChart plot mouse down event handler - divider drag detection
+        /// </summary>
+        private void TradingChartPlotMouseDown(object? sender, MouseEventArgs e)
+        {
+            dividerBeingDragged = customLayout.GetDivider(e.Y);
+            tradingChart.Plot.UserInputProcessor.IsEnabled = dividerBeingDragged is null;
+            
+            // Divider drag flag'ini set et
+            if (dividerBeingDragged is not null)
+            {
+                isDividerDrag = true;
+            }
+        }
+
+        /// <summary>
+        /// TradingChart plot mouse up event handler - divider drag completion
+        /// </summary>
+        private void TradingChartPlotMouseUp(object? sender, MouseEventArgs e)
+        {
+            if (dividerBeingDragged is not null)
+            {
+                dividerBeingDragged = null;
+                tradingChart.Plot.UserInputProcessor.IsEnabled = true;
+            }
+            isDividerDrag = false;
+        }
+
+        /// <summary>
+        /// TradingChart plot mouse move event handler - divider dragging and cursor
+        /// </summary>
+        private void TradingChartPlotMouseMove(object? sender, MouseEventArgs e)
+        {
+            HandleDividerDrag(e);
+            HandleCrosshair(e);
+        }
+
+        /// <summary>
+        /// Handle divider dragging and cursor changes
+        /// </summary>
+        private void HandleDividerDrag(MouseEventArgs e)
+        {
+            if (dividerBeingDragged is not null)
+            {
+                customLayout?.SetDivider(dividerBeingDragged.Value, e.Y);
+                tradingChart.Plot.Refresh();
+            }
+
+            Cursor = customLayout?.GetDivider(e.Y) is not null ? Cursors.SizeNS : Cursors.Default;
+        }
+
+        /// <summary>
+        /// Handle crosshair display logic
+        /// </summary>
+        private void HandleCrosshair(MouseEventArgs e)
+        {
+            // Eğer divider sürükleniyorsa crosshair gösterme
+            if (dividerBeingDragged is not null) return;
+
+            // Mouse koordinatlarını al
+            var mousePixel = new ScottPlot.Pixel(e.X, e.Y);
+
+            if (useCrossHairAllPlots)
+            {
+                // MOD 1: Tüm plotlarda crosshair göster (X senkronize, Y her plot'ta farklı)
+                // Önce mouse'un hangi plot üzerinde olduğunu bul
+                int mouseOverPlotIndex = -1;
+                for (int i = 0; i < allPlots.Length; i++)
+                {
+                    var plotRect = allPlots[i].RenderManager.LastRender.DataRect;
+                    if (e.X >= plotRect.Left && e.X <= plotRect.Right &&
+                        e.Y >= plotRect.Top && e.Y <= plotRect.Bottom)
+                    {
+                        mouseOverPlotIndex = i;
+                        break;
+                    }
+                }
+
+                // Eğer mouse herhangi bir plot üzerindeyse
+                if (mouseOverPlotIndex >= 0)
+                {
+                    // X koordinatını mouse'un olduğu plot'tan al
+                    var mainCoords = allPlots[mouseOverPlotIndex].GetCoordinates(mousePixel);
+                    double sharedX = mainCoords.X;
+
+                    // Tüm plotlarda aynı X koordinatında crosshair göster
+                    for (int i = 0; i < allPlots.Length && i < crosshairs.Count; i++)
+                    {
+                        var plot = allPlots[i];
+                        var crosshair = crosshairs[i];
+
+                        if (i == mouseOverPlotIndex)
+                        {
+                            // Mouse'un üzerindeki plot - tam koordinatları kullan
+                            crosshair.Position = mainCoords;
+                        }
+                        else
+                        {
+                            // Diğer plotlar - aynı X, kendi plot'larının ortasında Y
+                            var plotLimits = plot.Axes.GetLimits();
+                            double centerY = (plotLimits.Top + plotLimits.Bottom) / 2;
+                            crosshair.Position = new ScottPlot.Coordinates(sharedX, centerY);
+                        }
+
+                        crosshair.IsVisible = true;
+                    }
+                }
+                else
+                {
+                    // Mouse hiçbir plot üzerinde değil - tümünü gizle
+                    foreach (var crosshair in crosshairs)
+                    {
+                        crosshair.IsVisible = false;
+                    }
+                }
+            }
+            else
+            {
+                // MOD 2: Sadece mouse'un üzerindeki plot'ta crosshair göster
+                for (int i = 0; i < allPlots.Length && i < crosshairs.Count; i++)
+                {
+                    var plot = allPlots[i];
+                    var crosshair = crosshairs[i];
+
+                    // Mouse'un bu plot üzerinde olup olmadığını kontrol et
+                    var plotRect = plot.RenderManager.LastRender.DataRect;
+                    if (e.X >= plotRect.Left && e.X <= plotRect.Right &&
+                        e.Y >= plotRect.Top && e.Y <= plotRect.Bottom)
+                    {
+                        // Mouse bu plot üzerinde - koordinatları al
+                        var coords = plot.GetCoordinates(mousePixel);
+                        crosshair.Position = coords;
+                        crosshair.IsVisible = true;
+                    }
+                    else
+                    {
+                        // Mouse bu plot üzerinde değil - gizle
+                        crosshair.IsVisible = false;
+                    }
+                }
+            }
+
+            tradingChart.Plot.Refresh();
+        }
+
+        private void TradingChartPlotMouseLeave(object? sender, EventArgs e)
+        {
+            foreach (var crosshair in crosshairs)
+            {
+                crosshair.IsVisible = false;
+            }
+            tradingChart.Plot.Refresh();
+        }
+
+#endregion
+
+#region Keyboard Events
+
+/// <summary>
+/// Keyboard event'lerini initialize eder
+/// </summary>
+private void InitializeKeyboardEvents()
         {
             this.KeyPreview = true; // Form'un key event'leri yakalaması için
             this.KeyDown += OnFormKeyDown;
@@ -1704,7 +1954,7 @@ namespace AlgoTradeWithScottPlot
             bool useRightYAxis = false;
 
             // Cross-hair tercihi: true = tüm plotlarda sync, false = sadece mouse'un üzerindeki plot'ta
-            bool useCrossHairAllPlots = true;
+            useCrossHairAllPlots = true;
 
             // ===========================================
             // PLOT 0: Candlestick (Price Chart)  
@@ -1715,7 +1965,7 @@ namespace AlgoTradeWithScottPlot
             plot0.Title("Price Chart (Candlestick)");
             plot0.YLabel("Price");
             plot0.Axes.AutoScale();
-
+/*
             // ===========================================
             // PLOT 1: Volume
             // ===========================================
@@ -1742,6 +1992,7 @@ namespace AlgoTradeWithScottPlot
             plot1.Title("Volume");
             plot1.YLabel("Volume");
             plot1.Axes.AutoScale();
+*/
 
             // ===========================================
             // PLOT 2: Moving Averages
@@ -2079,7 +2330,7 @@ namespace AlgoTradeWithScottPlot
             // DraggableRows Layout ile plot yüksekliklerini ayarla
             // ===================================================================
             // DraggableRows layout oluştur
-            var customLayout = new ScottPlot.MultiplotLayouts.DraggableRows();
+            customLayout = new ScottPlot.MultiplotLayouts.DraggableRows();
             tradingChart.Plot.Multiplot.Layout = customLayout;
 
             // Her plot için yükseklikleri belirle
@@ -2088,7 +2339,7 @@ namespace AlgoTradeWithScottPlot
             {
                 if (plotManager.GetPlotId(i) == "0")
                 {
-                    plotHeights.Add(600); // Candlestick chart için daha yüksek
+                    plotHeights.Add(400); // Candlestick chart için daha yüksek
                 }
                 else
                 {
@@ -2203,130 +2454,28 @@ namespace AlgoTradeWithScottPlot
             // ===================================================================
             // Mouse event'leri - Plotlar arasındaki divider'ları sürüklenebilir yap
             // ===================================================================
-            int? dividerBeingDragged = null;
+            tradingChart.Plot.MouseDown += TradingChartPlotMouseDown;
 
-            tradingChart.Plot.MouseDown += (s, e) =>
-            {
-                dividerBeingDragged = customLayout.GetDivider(e.Y);
-                tradingChart.Plot.UserInputProcessor.IsEnabled = dividerBeingDragged is null;
-                
-                // Divider drag flag'ini set et
-                if (dividerBeingDragged is not null)
-                {
-                    isDividerDrag = true;
-                }
-            };
+            tradingChart.Plot.MouseUp += TradingChartPlotMouseUp;
 
-            tradingChart.Plot.MouseUp += (s, e) =>
-            {
-                if (dividerBeingDragged is not null)
-                {
-                    dividerBeingDragged = null;
-                    tradingChart.Plot.UserInputProcessor.IsEnabled = true;
-                }
-                isDividerDrag = false;
-            };
-
-            tradingChart.Plot.MouseMove += (s, e) =>
-            {
-                if (dividerBeingDragged is not null)
-                {
-                    customLayout.SetDivider(dividerBeingDragged.Value, e.Y);
-                    tradingChart.Plot.Refresh();
-                }
-
-                Cursor = customLayout.GetDivider(e.Y) is not null ? Cursors.SizeNS : Cursors.Default;
-            };
+            tradingChart.Plot.MouseMove += TradingChartPlotMouseMove;
 
             // ===================================================================
             // Mouse Wheel - Zoom (scrollbar'ı etkilemesin)
             // ===================================================================
-            tradingChart.Plot.MouseWheel += (s, e) =>
-            {
-                // Mouse wheel ile zoom yap
-                double zoomFactor = e.Delta > 0 ? 0.9 : 1.1;  // Delta > 0 = zoom in, Delta < 0 = zoom out
-
-                // Mouse'un üzerinde olduğu plot'u bul
-                var mousePixel = new ScottPlot.Pixel(e.X, e.Y);
-
-                // Tüm plotlarda zoom yap (X ekseni shared olduğu için)
-                foreach (var plot in tradingChart.Plot.Multiplot.GetPlots())
-                {
-                    var currentLimits = plot.Axes.GetLimits();
-
-                    // X ekseninde zoom (tüm plotlarda aynı)
-                    double centerX = (currentLimits.Left + currentLimits.Right) / 2;
-                    double spanX = (currentLimits.Right - currentLimits.Left) * zoomFactor;
-
-                    // Y ekseninde zoom (her plot kendi Y ekseninde)
-                    double centerY = (currentLimits.Bottom + currentLimits.Top) / 2;
-                    double spanY = (currentLimits.Top - currentLimits.Bottom) * zoomFactor;
-
-                    plot.Axes.SetLimits(
-                        centerX - spanX / 2, centerX + spanX / 2,
-                        centerY - spanY / 2, centerY + spanY / 2
-                    );
-                }
-
-                tradingChart.Plot.Refresh();
-
-                // Event'i handle et - scrollbar'a gitmesin
-                ((System.Windows.Forms.HandledMouseEventArgs)e).Handled = true;
-            };
-
-            // TradingChart resize event'i ekle - form büyüdüğünde FormsPlot genişliğini güncelle
-            tradingChart.Resize += (s, ev) =>
-            {
-                // Multiplot aktif ise genişliği güncelle
-                try
-                {
-                    if (tradingChart.Plot.Dock == DockStyle.None && tradingChart.Plot.Height > 1000) // Multiplot modunda
-                    {
-                        if (panelCenterObj != null)
-                        {
-                            int resizedWidth = panelCenterObj.ClientSize.Width;
-
-                            // LeftPanel visible ise ekstra düzeltme yap
-                            if (tradingChart.LeftPanel.Visible)
-                            {
-                                resizedWidth -= tradingChart.LeftPanel.Width + 5;
-                            }
-
-                            // RightPanel visible ise ekstra düzeltme yap
-                            if (tradingChart.RightPanel.Visible)
-                            {
-                                resizedWidth -= tradingChart.RightPanel.Width + 5;
-                            }
-
-                            // TopPanel visible ise ekstra düzeltme
-                            if (tradingChart.TopPanel.Visible)
-                            {
-                                resizedWidth -= 5;
-                            }
-
-                            // Scrollbar ve plot margin'leri için ekstra boşluk (axes lock size kullanıldığı için daha az gerekli)
-                            resizedWidth -= 20;
-
-                            tradingChart.Plot.Width = resizedWidth;
-                        }
-                        else
-                        {
-                            tradingChart.Plot.Width = tradingChart.ClientSize.Width - SystemInformation.VerticalScrollBarWidth - 20;
-                        }
-                    }
-                }
-                catch { }
-            };
+            tradingChart.Plot.MouseWheel += TradingChartPlotMouseWheel;
 
             // ===================================================================
-
+            // TradingChart resize event'i ekle - form büyüdüğünde FormsPlot genişliğini güncelle
+            // ===================================================================
+            tradingChart.Resize += TradingChartResize;
 
 
             // ===================================================================
             // Grid ve X-axis sharing ayarları
             // ===================================================================
             // Tüm plotları al
-            var allPlots = tradingChart.Plot.Multiplot.GetPlots();
+            allPlots = tradingChart.Plot.Multiplot.GetPlots();
 
             if (allPlots.Length > 0)
             {
@@ -2412,8 +2561,10 @@ namespace AlgoTradeWithScottPlot
             // ===================================================================
             // Cross-hair - Tüm plotlarda mouse koordinatlarını göster
             // ===================================================================
+
             // Her plot için cross-hair oluştur
-            var crosshairs = new List<ScottPlot.Plottables.Crosshair>();
+            crosshairs.Clear(); // Önceki crosshair'leri temizle
+
             foreach (var plot in allPlots)
             {
                 var crosshair = plot.Add.Crosshair(0, 0);
@@ -2425,106 +2576,12 @@ namespace AlgoTradeWithScottPlot
             }
 
             // Mouse move event - Crosshair'i güncelle (flag'e göre)
-            tradingChart.Plot.MouseMove += (s, e) =>
-            {
-                // Eğer divider sürükleniyorsa crosshair gösterme
-                if (dividerBeingDragged is not null) return;
+            // Artık TradingChartPlotMouseMove metodu hem divider hem crosshair işlerini yapıyor
 
-                // Mouse koordinatlarını al
-                var mousePixel = new ScottPlot.Pixel(e.X, e.Y);
-
-                if (useCrossHairAllPlots)
-                {
-                    // MOD 1: Tüm plotlarda crosshair göster (X senkronize, Y her plot'ta farklı)
-                    // Önce mouse'un hangi plot üzerinde olduğunu bul
-                    int mouseOverPlotIndex = -1;
-                    for (int i = 0; i < allPlots.Length; i++)
-                    {
-                        var plotRect = allPlots[i].RenderManager.LastRender.DataRect;
-                        if (e.X >= plotRect.Left && e.X <= plotRect.Right &&
-                            e.Y >= plotRect.Top && e.Y <= plotRect.Bottom)
-                        {
-                            mouseOverPlotIndex = i;
-                            break;
-                        }
-                    }
-
-                    // Eğer mouse herhangi bir plot üzerindeyse
-                    if (mouseOverPlotIndex >= 0)
-                    {
-                        // X koordinatını mouse'un olduğu plot'tan al
-                        var mainCoords = allPlots[mouseOverPlotIndex].GetCoordinates(mousePixel);
-                        double sharedX = mainCoords.X;
-
-                        // Tüm plotlarda aynı X koordinatında crosshair göster
-                        for (int i = 0; i < allPlots.Length && i < crosshairs.Count; i++)
-                        {
-                            var plot = allPlots[i];
-                            var crosshair = crosshairs[i];
-
-                            if (i == mouseOverPlotIndex)
-                            {
-                                // Mouse'un üzerindeki plot - tam koordinatları kullan
-                                crosshair.Position = mainCoords;
-                            }
-                            else
-                            {
-                                // Diğer plotlar - aynı X, kendi plot'larının ortasında Y
-                                var plotLimits = plot.Axes.GetLimits();
-                                double centerY = (plotLimits.Top + plotLimits.Bottom) / 2;
-                                crosshair.Position = new ScottPlot.Coordinates(sharedX, centerY);
-                            }
-
-                            crosshair.IsVisible = true;
-                        }
-                    }
-                    else
-                    {
-                        // Mouse hiçbir plot üzerinde değil - tümünü gizle
-                        foreach (var crosshair in crosshairs)
-                        {
-                            crosshair.IsVisible = false;
-                        }
-                    }
-                }
-                else
-                {
-                    // MOD 2: Sadece mouse'un üzerindeki plot'ta crosshair göster
-                    for (int i = 0; i < allPlots.Length && i < crosshairs.Count; i++)
-                    {
-                        var plot = allPlots[i];
-                        var crosshair = crosshairs[i];
-
-                        // Mouse'un bu plot üzerinde olup olmadığını kontrol et
-                        var plotRect = plot.RenderManager.LastRender.DataRect;
-                        if (e.X >= plotRect.Left && e.X <= plotRect.Right &&
-                            e.Y >= plotRect.Top && e.Y <= plotRect.Bottom)
-                        {
-                            // Mouse bu plot üzerinde - koordinatları al
-                            var coords = plot.GetCoordinates(mousePixel);
-                            crosshair.Position = coords;
-                            crosshair.IsVisible = true;
-                        }
-                        else
-                        {
-                            // Mouse bu plot üzerinde değil - gizle
-                            crosshair.IsVisible = false;
-                        }
-                    }
-                }
-
-                tradingChart.Plot.Refresh();
-            };
-
+            // ===================================================================
             // Mouse leave event - Crosshair'leri gizle
-            tradingChart.Plot.MouseLeave += (s, e) =>
-            {
-                foreach (var crosshair in crosshairs)
-                {
-                    crosshair.IsVisible = false;
-                }
-                tradingChart.Plot.Refresh();
-            };
+            // ===================================================================
+            tradingChart.Plot.MouseLeave += TradingChartPlotMouseLeave;
             // ===================================================================
 
             // ===================================================================
