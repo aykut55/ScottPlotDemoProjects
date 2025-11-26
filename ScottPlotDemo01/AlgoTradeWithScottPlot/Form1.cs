@@ -2746,6 +2746,110 @@ namespace AlgoTradeWithScottPlot
 
         #endregion
 
+        #region Trading Chart Reset Management
+
+        /// <summary>
+        /// Tüm plotları reset eder (merkezi reset metodu)
+        /// </summary>
+        /// <param name="resetType">Reset tipi</param>
+        public void TradingChartPlotReset(ResetType resetType = ResetType.ViewOnly)
+        {
+            try
+            {
+                LogManager.Instance.LogInfo($"Tüm plotlar reset ediliyor - Tip: {resetType}");
+
+                if (allPlots == null || allPlots.Length == 0)
+                {
+                    LogManager.Instance.LogWarning("Reset edilecek plot bulunamadı");
+                    return;
+                }
+
+                switch (resetType)
+                {
+                    case ResetType.ViewOnly:
+                        // Sadece görünüm reset (zoom, pan)
+                        foreach (var plot in allPlots)
+                        {
+                            plot.Axes.AutoScale();
+                        }
+                        break;
+
+                    case ResetType.DataOnly:
+                        // Data reset (bu durumda implementasyona bağlı)
+                        // Örneğin: indicators yeniden hesapla, signals temizle vs.
+                        LogManager.Instance.LogInfo("Data reset henüz implement edilmedi");
+                        break;
+
+                    case ResetType.Complete:
+                        // Hem görünüm hem data reset
+                        foreach (var plot in allPlots)
+                        {
+                            plot.Axes.AutoScale();
+                        }
+                        // İleride data reset logic buraya eklenecek
+                        break;
+                }
+
+                // Tüm plot parametrelerini güncelle
+                for (int i = 0; i < allPlots.Length; i++)
+                {
+                    lock (paramsLock)
+                    {
+                        if (paramsList.ContainsKey(i))
+                        {
+                            var params_ = paramsList[i];
+                            params_.Reset.IsResetRequested = true;
+                            params_.Reset.ResetType = resetType;
+                            params_.Reset.LastResetTime = DateTime.Now;
+                            params_.LastUpdated = DateTime.Now;
+                        }
+                    }
+                }
+
+                // Chart'ı refresh et
+                plotManager.Refresh();
+
+                LogManager.Instance.LogInfo($"Tüm plotlar başarıyla reset edildi - {allPlots.Length} plot");
+            }
+            catch (Exception ex)
+            {
+                LogManager.Instance.LogError($"Plot reset hatası: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Middle-click reset event handler
+        /// </summary>
+        private void OnMiddleClickReset(int plotIndex)
+        {
+            LogManager.Instance.LogDebug($"Middle-click reset tetiklendi - Plot: {plotIndex}");
+            
+            // Tüm plotları reset et (tek plot yerine)
+            TradingChartPlotReset(ResetType.ViewOnly);
+        }
+
+        /// <summary>
+        /// Middle-double-click reset event handler (daha güçlü reset)
+        /// </summary>
+        private void OnMiddleDoubleClickReset(int plotIndex)
+        {
+            LogManager.Instance.LogDebug($"Middle-double-click reset tetiklendi - Plot: {plotIndex}");
+            
+            // Complete reset (daha kapsamlı)
+            TradingChartPlotReset(ResetType.Complete);
+        }
+
+        /// <summary>
+        /// Programmatik reset - dışarıdan çağrılabilir
+        /// </summary>
+        /// <param name="resetType">Reset tipi</param>
+        public void ResetAllPlots(ResetType resetType = ResetType.ViewOnly)
+        {
+            TradingChartPlotReset(resetType);
+        }
+
+        #endregion
+
         #region Plot Parameters Management
 
         /// <summary>
