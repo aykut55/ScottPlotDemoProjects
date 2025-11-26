@@ -32,6 +32,15 @@ namespace AlgoTradeWithScottPlot
         private double[]? cumulativePnL;
         private double[]? balance;
 
+        // Global plot parameters list
+        private Dictionary<int, PlotParameters> paramsList = new Dictionary<int, PlotParameters>();
+        private readonly object paramsLock = new object();
+        
+        // Active plot tracking
+        private int lastActiveplotIndex = -1;
+        private ScottPlot.Coordinates lastClickCoordinates = new ScottPlot.Coordinates(0, 0);
+        private Point lastClickPixelPosition = Point.Empty;
+
         public Form1()
         {
             InitializeComponent();
@@ -1830,6 +1839,9 @@ namespace AlgoTradeWithScottPlot
             var plotId = plotManager.GetPlotId(plotIndex);
             var coords = GetCoordinatesAtPosition(e.X, e.Y, plotIndex);
 
+            // Active plot'u güncelle ve son tıklanan koordinatları sakla
+            UpdateActiveplot(plotIndex, coords, new Point(e.X, e.Y));
+
             System.Diagnostics.Debug.WriteLine($"Plot Click - Index: {plotIndex}, ID: {plotId}, Button: {e.Button}, Coords: ({coords.X:F2}, {coords.Y:F2})");
 
             // Plot tipine göre özel işlemler
@@ -1894,6 +1906,9 @@ namespace AlgoTradeWithScottPlot
         {
             var plotIndex = GetPlotIndexAtPosition(e.X, e.Y);
             var coords = GetCoordinatesAtPosition(e.X, e.Y, plotIndex);
+
+            // Mouse move sırasında da active plot'u güncelle (crosshair için) - koordinat saklamadan
+            UpdateActiveplot(plotIndex);
 
             if (isMouseDown)
             {
@@ -2630,6 +2645,362 @@ namespace AlgoTradeWithScottPlot
         }
 
         #endregion
+
+        #endregion
+
+        #region Active Plot Tracking
+
+        /// <summary>
+        /// Active plot'u günceller ve parametrelerini otomatik okur
+        /// </summary>
+        /// <param name="plotIndex">Yeni active plot index</param>
+        /// <param name="coordinates">Tıklanan koordinatlar (opsiyonel)</param>
+        /// <param name="pixelPosition">Tıklanan pixel pozisyonu (opsiyonel)</param>
+        private void UpdateActiveplot(int plotIndex, ScottPlot.Coordinates? coordinates = null, Point? pixelPosition = null)
+        {
+            if (plotIndex < 0) return;
+
+            bool plotChanged = plotIndex != lastActiveplotIndex;
+            
+            lastActiveplotIndex = plotIndex;
+            
+            // Koordinatları sakla (sadece tıklama event'inde)
+            if (coordinates.HasValue && pixelPosition.HasValue)
+            {
+                lastClickCoordinates = coordinates.Value;
+                lastClickPixelPosition = pixelPosition.Value;
+                
+                LogManager.Instance.LogDebug($"Active plot değişti - Index: {plotIndex}, Koordinat: ({coordinates.Value.X:F2}, {coordinates.Value.Y:F2})");
+            }
+            else if (plotChanged)
+            {
+                LogManager.Instance.LogDebug($"Active plot değişti - Index: {plotIndex}");
+            }
+            
+            // Plot değiştiğinde veya koordinat güncellemesi varsa parametreleri oku
+            if (plotChanged || coordinates.HasValue)
+            {
+                ReadPlotParameters(plotIndex);
+            }
+        }
+
+        /// <summary>
+        /// Son aktif plot'un index'ini döndürür
+        /// </summary>
+        /// <returns>Last active plot index (-1 if none)</returns>
+        public int GetLastActiveplotIndex()
+        {
+            return lastActiveplotIndex;
+        }
+
+        /// <summary>
+        /// Son aktif plot'un parametrelerini döndürür
+        /// </summary>
+        /// <returns>Last active plot parameters (null if none)</returns>
+        public PlotParameters? GetLastActiveplotParameters()
+        {
+            if (lastActiveplotIndex < 0) return null;
+            return GetPlotParameters(lastActiveplotIndex);
+        }
+
+        /// <summary>
+        /// Son aktif plot'u manuel olarak set eder
+        /// </summary>
+        /// <param name="plotIndex">Set edilecek plot index</param>
+        public void SetActiveplot(int plotIndex)
+        {
+            if (plotIndex < 0) return;
+            
+            lastActiveplotIndex = plotIndex;
+            ReadPlotParameters(plotIndex);
+            LogManager.Instance.LogInfo($"Active plot manuel set edildi - Index: {plotIndex}");
+        }
+
+        /// <summary>
+        /// Son tıklanan koordinatları döndürür
+        /// </summary>
+        /// <returns>Son tıklanan chart koordinatları</returns>
+        public ScottPlot.Coordinates GetLastClickCoordinates()
+        {
+            return lastClickCoordinates;
+        }
+
+        /// <summary>
+        /// Son tıklanan pixel pozisyonunu döndürür
+        /// </summary>
+        /// <returns>Son tıklanan pixel pozisyonu</returns>
+        public Point GetLastClickPixelPosition()
+        {
+            return lastClickPixelPosition;
+        }
+
+        /// <summary>
+        /// Son tıklanan koordinatlarda OHLC verisini getirir
+        /// </summary>
+        /// <returns>OHLC verisi (varsa)</returns>
+        public ScottPlot.OHLC? GetOHLCAtLastClick()
+        {
+            if (lastActiveplotIndex != 0) return null; // Sadece candlestick plot için
+            return GetOHLCAtCoordinate(lastClickCoordinates.X);
+        }
+
+        #endregion
+
+        #region Plot Parameters Management
+
+        /// <summary>
+        /// Belirtilen plot'tan parametreleri okur ve global paramsList'e kaydeder
+        /// </summary>
+        /// <param name="plotIndex">Okunacak plot indexi</param>
+        /// <returns>Okunan PlotParameters</returns>
+        public PlotParameters? ReadPlotParameters(int plotIndex)
+        {
+            try
+            {
+                LogManager.Instance.LogDebug($"Plot parametreleri okunuyor - Index: {plotIndex}");
+
+                if (allPlots == null || plotIndex < 0 || plotIndex >= allPlots.Length)
+                {
+                    LogManager.Instance.LogWarning($"Geçersiz plot index: {plotIndex}");
+                    return null;
+                }
+
+                var plot = allPlots[plotIndex];
+                var plotId = plotManager.GetPlotId(plotIndex);
+
+                var parameters = new PlotParameters
+                {
+                    PlotIndex = plotIndex,
+                    PlotId = plotId,
+                    LastUpdated = DateTime.Now
+                };
+
+                // Axis limits okuma
+                var xLimits = plot.Axes.GetLimits();
+                parameters.XAxis.Min = xLimits.Left;
+                parameters.XAxis.Max = xLimits.Right;
+                parameters.YAxis.Min = xLimits.Bottom;
+                parameters.YAxis.Max = xLimits.Top;
+
+                // AutoScale durumu (ScottPlot 5.x için güncellenmiş)
+                parameters.XAxis.IsAutoScale = true; // Default olarak true
+                parameters.YAxis.IsAutoScale = true; // Default olarak true
+
+                // Mouse interaction durumları
+                parameters.Interaction.IsMouseDown = isMouseDown;
+                parameters.Interaction.IsDragging = isDragging;
+                parameters.Interaction.IsZooming = isZooming;
+                parameters.Interaction.IsPanning = isPanning;
+
+                // Pan parametreleri
+                if (isPanning)
+                {
+                    parameters.Pan.IsActive = true;
+                    parameters.Pan.StartPosition = mouseDownPoint;
+                    parameters.Pan.StartTime = DateTime.Now;
+                }
+
+                // Zoom parametreleri
+                if (isZooming)
+                {
+                    parameters.Zoom.IsActive = true;
+                    parameters.Zoom.FactorX = (xLimits.Right - xLimits.Left);
+                    parameters.Zoom.FactorY = (xLimits.Top - xLimits.Bottom);
+                    parameters.Zoom.CenterX = (xLimits.Left + xLimits.Right) / 2;
+                    parameters.Zoom.CenterY = (xLimits.Bottom + xLimits.Top) / 2;
+                }
+
+                // Drag parametreleri
+                if (isDragging)
+                {
+                    parameters.Drag.IsActive = true;
+                    parameters.Drag.StartPosition = mouseDownPoint;
+                    parameters.Drag.Button = mouseDownButton;
+                    parameters.Drag.IsValidDrag = true;
+                }
+
+                // Reset durumu kontrolü
+                parameters.Reset.IsResetRequested = false;
+                parameters.Reset.ResetType = ResetType.None;
+
+                // Global listede sakla
+                lock (paramsLock)
+                {
+                    paramsList[plotIndex] = parameters;
+                }
+
+                LogManager.Instance.LogInfo($"Plot parametreleri kaydedildi - {parameters}");
+                return parameters;
+            }
+            catch (Exception ex)
+            {
+                LogManager.Instance.LogError($"Plot parametreleri okunurken hata: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Tüm plotların parametrelerini okur
+        /// </summary>
+        public void ReadAllPlotParameters()
+        {
+            LogManager.Instance.LogInfo("Tüm plot parametreleri okunuyor...");
+            
+            if (allPlots == null) return;
+
+            for (int i = 0; i < allPlots.Length; i++)
+            {
+                ReadPlotParameters(i);
+            }
+
+            LogManager.Instance.LogInfo($"Toplam {allPlots.Length} plot parametresi okundu");
+        }
+
+        /// <summary>
+        /// Belirtilen plot'a parametreleri uygular
+        /// </summary>
+        /// <param name="plotIndex">Parametrelerin uygulanacağı plot index</param>
+        /// <param name="sourceIndex">Kaynak plot index (parametreler buradan kopyalanacak)</param>
+        public void ApplyPlotParameters(int plotIndex, int sourceIndex)
+        {
+            try
+            {
+                lock (paramsLock)
+                {
+                    if (!paramsList.ContainsKey(sourceIndex))
+                    {
+                        LogManager.Instance.LogWarning($"Kaynak plot parametreleri bulunamadı - Index: {sourceIndex}");
+                        return;
+                    }
+
+                    if (allPlots == null || plotIndex < 0 || plotIndex >= allPlots.Length)
+                    {
+                        LogManager.Instance.LogWarning($"Geçersiz hedef plot index: {plotIndex}");
+                        return;
+                    }
+
+                    var sourceParams = paramsList[sourceIndex];
+                    var targetPlot = allPlots[plotIndex];
+
+                    LogManager.Instance.LogInfo($"Parametreler uygulanıyor - Kaynak: {sourceIndex} → Hedef: {plotIndex}");
+
+                    // Axis limits uygulama
+                    targetPlot.Axes.SetLimits(
+                        sourceParams.XAxis.Min,
+                        sourceParams.XAxis.Max,
+                        sourceParams.YAxis.Min,
+                        sourceParams.YAxis.Max
+                    );
+
+                    // AutoScale uygulama
+                    if (sourceParams.XAxis.IsAutoScale)
+                        targetPlot.Axes.AutoScaleX();
+                    
+                    if (sourceParams.YAxis.IsAutoScale)
+                        targetPlot.Axes.AutoScaleY();
+
+                    // Hedef plot'un parametrelerini güncelle
+                    var updatedParams = sourceParams.Clone();
+                    updatedParams.PlotIndex = plotIndex;
+                    updatedParams.PlotId = plotManager.GetPlotId(plotIndex);
+                    updatedParams.LastUpdated = DateTime.Now;
+                    
+                    paramsList[plotIndex] = updatedParams;
+
+                    LogManager.Instance.LogInfo($"Parametreler başarıyla uygulandı - {updatedParams}");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogManager.Instance.LogError($"Parametreler uygulanırken hata: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Belirtilen plot'un parametrelerini döndürür
+        /// </summary>
+        public PlotParameters? GetPlotParameters(int plotIndex)
+        {
+            lock (paramsLock)
+            {
+                return paramsList.ContainsKey(plotIndex) ? paramsList[plotIndex] : null;
+            }
+        }
+
+        /// <summary>
+        /// Tüm plot parametrelerini döndürür
+        /// </summary>
+        public Dictionary<int, PlotParameters> GetAllPlotParameters()
+        {
+            lock (paramsLock)
+            {
+                return new Dictionary<int, PlotParameters>(paramsList);
+            }
+        }
+
+        /// <summary>
+        /// Plot parametrelerini temizler
+        /// </summary>
+        public void ClearPlotParameters()
+        {
+            lock (paramsLock)
+            {
+                paramsList.Clear();
+                LogManager.Instance.LogInfo("Tüm plot parametreleri temizlendi");
+            }
+        }
+
+        /// <summary>
+        /// Belirtilen plot'un reset işlemini gerçekleştirir
+        /// </summary>
+        public void ResetPlotParameters(int plotIndex, ResetType resetType = ResetType.Complete)
+        {
+            try
+            {
+                if (allPlots == null || plotIndex < 0 || plotIndex >= allPlots.Length)
+                    return;
+
+                var plot = allPlots[plotIndex];
+                
+                LogManager.Instance.LogInfo($"Plot reset ediliyor - Index: {plotIndex}, Tip: {resetType}");
+
+                switch (resetType)
+                {
+                    case ResetType.ViewOnly:
+                        plot.Axes.AutoScale();
+                        break;
+                    
+                    case ResetType.DataOnly:
+                        // Data reset logic burada implementasyona bağlı
+                        break;
+                    
+                    case ResetType.Complete:
+                        plot.Axes.AutoScale();
+                        // Additional reset logic
+                        break;
+                }
+
+                // Reset parametrelerini güncelle
+                lock (paramsLock)
+                {
+                    if (paramsList.ContainsKey(plotIndex))
+                    {
+                        var params_ = paramsList[plotIndex];
+                        params_.Reset.IsResetRequested = true;
+                        params_.Reset.ResetType = resetType;
+                        params_.Reset.LastResetTime = DateTime.Now;
+                        params_.LastUpdated = DateTime.Now;
+                    }
+                }
+
+                plotManager.Refresh();
+                LogManager.Instance.LogInfo($"Plot reset tamamlandı - Index: {plotIndex}");
+            }
+            catch (Exception ex)
+            {
+                LogManager.Instance.LogError($"Plot reset hatası: {ex.Message}");
+            }
+        }
 
         #endregion
 
