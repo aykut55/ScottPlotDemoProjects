@@ -20,6 +20,7 @@ namespace AlgoTradeWithScottPlot.Components
         private readonly object _lockObject = new object();
         private int _plotCounter = 0;
         private bool _isInitialized = false;
+        private LogManager? _logManager;
         
         // Default boyutlar
         public static readonly int DefaultWidth = 1200;
@@ -36,6 +37,35 @@ namespace AlgoTradeWithScottPlot.Components
             _plots = new Dictionary<string, PlotInfo>();
             _plotIds = new Dictionary<int, string>();
             _plotToIndex = new Dictionary<ScottPlot.Plot, int>();
+            _logManager = LogManager.Instance; // Default olarak singleton instance kullan
+        }
+
+        /// <summary>
+        /// LogManager'ı set eder
+        /// </summary>
+        /// <param name="logManager">Kullanılacak LogManager instance'ı</param>
+        public void SetLogManager(LogManager? logManager)
+        {
+            _logManager = logManager;
+        }
+
+        /// <summary>
+        /// Mevcut LogManager'ı döndürür
+        /// </summary>
+        /// <returns>LogManager instance'ı veya null</returns>
+        public LogManager? GetLogManager()
+        {
+            return _logManager;
+        }
+
+        /// <summary>
+        /// Log mesajı yazmak için yardımcı metod
+        /// </summary>
+        /// <param name="level">Log seviyesi</param>
+        /// <param name="message">Log mesajı</param>
+        private void Log(LogLevel level, string message)
+        {
+            _logManager?.Log(level, $"[PlotManager] {message}");
         }
 
         public void SetTradingChart(TradingChart tradingChart)
@@ -44,6 +74,7 @@ namespace AlgoTradeWithScottPlot.Components
             _formsPlot = _tradingChart.Plot ?? throw new ArgumentNullException(nameof(_tradingChart.Plot));
             _plotCounter = 0;
             _isInitialized = false;
+            Log(LogLevel.Info, "TradingChart bağlandı");
         }
 
         /// <summary>
@@ -73,6 +104,8 @@ namespace AlgoTradeWithScottPlot.Components
             {
                 try
                 {
+                    Log(LogLevel.Info, "Tüm plotlar temizleniyor...");
+                    
                     // Multiplot'u tamamen temizle
                     _formsPlot.Reset();
                     
@@ -87,9 +120,12 @@ namespace AlgoTradeWithScottPlot.Components
                     
                     // Chart'ı yenile
                     _formsPlot.Refresh();
+                    
+                    Log(LogLevel.Info, "Tüm plotlar temizlendi");
                 }
                 catch (Exception ex)
                 {
+                    Log(LogLevel.Error, $"Plot temizleme hatası: {ex.Message}");
                     System.Diagnostics.Debug.WriteLine($"Error removing all plots: {ex.Message}");
                 }
             }
@@ -147,6 +183,8 @@ namespace AlgoTradeWithScottPlot.Components
                 // Plot nesnesini index ile eşleştir
                 _plotToIndex[plot] = _plotCounter;
                 
+                Log(LogLevel.Debug, $"Yeni plot eklendi - Index: {_plotCounter}");
+                
                 // Plot counter'ı artır
                 _plotCounter++;
 
@@ -190,11 +228,13 @@ namespace AlgoTradeWithScottPlot.Components
             
             lock (_lockObject)
             {
+                Log(LogLevel.Debug, "Layout düzenleniyor...");
                 // Dikey olarak daralt
                 _formsPlot.Multiplot.CollapseVertically();
                 
                 // Chart'ı yenile
                 _formsPlot.Refresh();
+                Log(LogLevel.Debug, "Layout düzenlendi");
             }
         }
 
@@ -267,6 +307,7 @@ namespace AlgoTradeWithScottPlot.Components
 
             lock (_lockObject)
             {
+                Log(LogLevel.Debug, $"Plot data ekleniyor - Tip: {plotType}, Index: {index}");
                 IPlottable plottable = null;
 
                 switch (plotType)

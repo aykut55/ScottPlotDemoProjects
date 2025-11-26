@@ -36,7 +36,10 @@ namespace AlgoTradeWithScottPlot
         {
             InitializeComponent();
 
+            LogManager.Instance.AttachRichTextBox(richTextBox1);
+
             plotManager = new PlotManager(); // Bu satırı ekleyin
+            plotManager.SetLogManager(LogManager.Instance);
 
             // Initialize any additional UI components if needed
             InitializeUIComponents();
@@ -1081,6 +1084,8 @@ namespace AlgoTradeWithScottPlot
 
         private void button5_Click(object sender, EventArgs e)
         {
+            LogManager.Instance.LogInfo("Button5 işlemi başlatılıyor...");
+            
             // Önce veri üret
             button1_Click(sender, e);
 
@@ -1761,7 +1766,7 @@ namespace AlgoTradeWithScottPlot
 
             plotManager.Refresh();
 
-
+            LogManager.Instance.LogInfo("Button5 işlemi tamamlandı - Çoklu grafik oluşturuldu");
         }
 
         #region Plot Event Handling System

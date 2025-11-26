@@ -318,12 +318,13 @@
             btnCreateGrid = new Button();
             leftTitleLabel = new Label();
             rightPanel = new Panel();
+            button5 = new Button();
             button1 = new Button();
             button1979 = new Button();
             button1980 = new Button();
             centerPanel = new Panel();
             tradingChart = new AlgoTradeWithScottPlot.Components.TradingChart();
-            button5 = new Button();
+            richTextBox1 = new RichTextBox();
             mainMenu.SuspendLayout();
             mainToolStrip.SuspendLayout();
             statusBar.SuspendLayout();
@@ -332,6 +333,7 @@
             dataDisplayToolStrip.SuspendLayout();
             chartControlsToolStrip.SuspendLayout();
             gridLayoutToolStrip.SuspendLayout();
+            bottomPanel.SuspendLayout();
             leftPanel.SuspendLayout();
             rightPanel.SuspendLayout();
             centerPanel.SuspendLayout();
@@ -1038,10 +1040,11 @@
             // 
             bottomPanel.BackColor = Color.LightGreen;
             bottomPanel.BorderStyle = BorderStyle.FixedSingle;
+            bottomPanel.Controls.Add(richTextBox1);
             bottomPanel.Dock = DockStyle.Bottom;
-            bottomPanel.Location = new Point(0, 637);
+            bottomPanel.Location = new Point(0, 545);
             bottomPanel.Name = "bottomPanel";
-            bottomPanel.Size = new Size(973, 50);
+            bottomPanel.Size = new Size(973, 142);
             bottomPanel.TabIndex = 2;
             // 
             // leftPanel
@@ -1075,7 +1078,7 @@
             leftPanel.Dock = DockStyle.Left;
             leftPanel.Location = new Point(0, 169);
             leftPanel.Name = "leftPanel";
-            leftPanel.Size = new Size(238, 468);
+            leftPanel.Size = new Size(238, 376);
             leftPanel.TabIndex = 1;
             // 
             // button4
@@ -1312,8 +1315,18 @@
             rightPanel.Dock = DockStyle.Right;
             rightPanel.Location = new Point(853, 169);
             rightPanel.Name = "rightPanel";
-            rightPanel.Size = new Size(120, 468);
+            rightPanel.Size = new Size(120, 376);
             rightPanel.TabIndex = 0;
+            // 
+            // button5
+            // 
+            button5.Location = new Point(5, 130);
+            button5.Name = "button5";
+            button5.Size = new Size(75, 23);
+            button5.TabIndex = 3;
+            button5.Text = "button5";
+            button5.UseVisualStyleBackColor = true;
+            button5.Click += button5_Click;
             // 
             // button1
             // 
@@ -1353,7 +1366,7 @@
             centerPanel.Dock = DockStyle.Fill;
             centerPanel.Location = new Point(238, 169);
             centerPanel.Name = "centerPanel";
-            centerPanel.Size = new Size(615, 468);
+            centerPanel.Size = new Size(615, 376);
             centerPanel.TabIndex = 4;
             // 
             // tradingChart
@@ -1362,18 +1375,17 @@
             tradingChart.Dock = DockStyle.Fill;
             tradingChart.Location = new Point(0, 0);
             tradingChart.Name = "tradingChart";
-            tradingChart.Size = new Size(613, 466);
+            tradingChart.Size = new Size(613, 374);
             tradingChart.TabIndex = 0;
             // 
-            // button5
+            // richTextBox1
             // 
-            button5.Location = new Point(5, 130);
-            button5.Name = "button5";
-            button5.Size = new Size(75, 23);
-            button5.TabIndex = 3;
-            button5.Text = "button5";
-            button5.UseVisualStyleBackColor = true;
-            button5.Click += button5_Click;
+            richTextBox1.Dock = DockStyle.Fill;
+            richTextBox1.Location = new Point(0, 0);
+            richTextBox1.Name = "richTextBox1";
+            richTextBox1.Size = new Size(971, 140);
+            richTextBox1.TabIndex = 0;
+            richTextBox1.Text = "";
             // 
             // Form1
             // 
@@ -1407,6 +1419,7 @@
             chartControlsToolStrip.PerformLayout();
             gridLayoutToolStrip.ResumeLayout(false);
             gridLayoutToolStrip.PerformLayout();
+            bottomPanel.ResumeLayout(false);
             leftPanel.ResumeLayout(false);
             leftPanel.PerformLayout();
             rightPanel.ResumeLayout(false);
@@ -1422,5 +1435,6 @@
         private Button button1979;
         private Button button1;
         private Button button5;
+        private RichTextBox richTextBox1;
     }
 }
