@@ -1503,7 +1503,9 @@ namespace AlgoTradeWithScottPlot.Components
                 }
                 else // Middle click = Reset view
                 {
-                    ResetView();
+                    // NOT: Reset işlemi artık Form1'deki merkezi mekanizma tarafından yönetiliyor
+                    // Bu yüzden burada direkt ResetView() çağırmıyoruz
+                    // ResetView();
                 }
 
                 // Middle button flags sıfırla

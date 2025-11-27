@@ -1268,7 +1268,29 @@ namespace AlgoTradeWithScottPlot
             // Plot 4 ayarları
             plot4.Title("MACD");
             plot4.YLabel("MACD");
-            plot4.Axes.AutoScale();
+
+            // MACD için ilk 35 veriyi (slowPeriod:26 + signalPeriod:9) skip ederek geçerli verilere göre Y ekseni ayarla
+            int macdSkipCount = 26 + 9; // slowPeriod + signalPeriod
+            if (macdLine.Length > macdSkipCount)
+            {
+                var validMacd = macdLine.Skip(macdSkipCount).ToArray();
+                var validSignal = signalLine.Skip(macdSkipCount).ToArray();
+                var validHistogram = histogram.Skip(macdSkipCount).ToArray();
+
+                // Geçerli değerlerin min/max'ını bul
+                double minValue = Math.Min(validMacd.Min(), Math.Min(validSignal.Min(), validHistogram.Min()));
+                double maxValue = Math.Max(validMacd.Max(), Math.Max(validSignal.Max(), validHistogram.Max()));
+
+                // %10 margin ekleyerek Y eksenini ayarla
+                double margin = (maxValue - minValue) * 0.1;
+                plot4.Axes.SetLimitsY(minValue - margin, maxValue + margin);
+            }
+            else
+            {
+                plot4.Axes.AutoScale();
+            }
+
+            plot4.Axes.AutoScaleX();
             plot4.ShowLegend();
 
 
@@ -1893,6 +1915,15 @@ namespace AlgoTradeWithScottPlot
                 {
                     OnPlotDragEnd(mouseDownPoint, new Point(e.X, e.Y), mouseDownButton);
                 }
+                else // Drag olmadı, sadece click
+                {
+                    // Middle click ise reset işlemi tetikle
+                    if (mouseDownButton == MouseButtons.Middle)
+                    {
+                        var plotIndex = GetPlotIndexAtPosition(e.X, e.Y);
+                        OnMiddleClickReset(plotIndex);
+                    }
+                }
             }
 
             // Reset all flags
@@ -2017,14 +2048,10 @@ namespace AlgoTradeWithScottPlot
 
         private void OnMiddleDoubleClick(int plotIndex)
         {
-            System.Diagnostics.Debug.WriteLine($"Middle DoubleClick - Plot: {plotIndex} - Auto Scale");
-            // Auto scale işlemi
-            if (plotIndex >= 0 && plotIndex < plotManager.Count)
-            {
-                var plot = plotManager.GetPlot(plotIndex);
-                plot.Axes.AutoScale();
-                plotManager.Refresh();
-            }
+            System.Diagnostics.Debug.WriteLine($"Middle DoubleClick - Plot: {plotIndex} - Requesting reset for ALL plots");
+
+            // Tüm plotları reset et (OnMiddleDoubleClickReset metodunu çağır)
+            OnMiddleDoubleClickReset(plotIndex);
         }
 
         private void OnLeftDoubleClick(int plotIndex)

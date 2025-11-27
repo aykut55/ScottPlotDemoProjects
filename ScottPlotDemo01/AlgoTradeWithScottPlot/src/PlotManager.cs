@@ -21,6 +21,9 @@ namespace AlgoTradeWithScottPlot.Components
         private int _plotCounter = 0;
         private bool _isInitialized = false;
         private LogManager? _logManager;
+
+        // Reset management - Merkezi reset koordinasyonu için
+        private bool _resetRequested = false;
         
         // Default boyutlar
         public static readonly int DefaultWidth = 1200;
@@ -732,6 +735,90 @@ namespace AlgoTradeWithScottPlot.Components
         {
             string? plotId = GetPlotId(plotIndex);
             return plotId?.Equals("Candlestick", StringComparison.OrdinalIgnoreCase) == true;
+        }
+
+        /// <summary>
+        /// Reset flag'ini kontrol eder
+        /// </summary>
+        /// <returns>Reset isteniyorsa true</returns>
+        public bool IsResetRequested()
+        {
+            lock (_lockObject)
+            {
+                return _resetRequested;
+            }
+        }
+
+        /// <summary>
+        /// Reset flag'ini set eder (bir plot reset istediğinde)
+        /// </summary>
+        public void RequestReset()
+        {
+            lock (_lockObject)
+            {
+                _resetRequested = true;
+                Log(LogLevel.Info, "Reset istendi - tüm plotlar resetlenecek");
+            }
+        }
+
+        /// <summary>
+        /// Reset flag'ini temizler (reset işlemi tamamlandıktan sonra)
+        /// </summary>
+        public void ClearResetRequest()
+        {
+            lock (_lockObject)
+            {
+                _resetRequested = false;
+                Log(LogLevel.Debug, "Reset flag'i temizlendi");
+            }
+        }
+
+        /// <summary>
+        /// Tüm plotları resetler (flag kontrolü ile)
+        /// Bu metod döngü içinde çağrılabilir
+        /// </summary>
+        /// <returns>Reset yapıldıysa true</returns>
+        public bool ProcessResetRequest()
+        {
+            lock (_lockObject)
+            {
+                if (!_resetRequested)
+                    return false;
+
+                Log(LogLevel.Info, "Tüm plotlar resetleniyor...");
+
+                try
+                {
+                    // Multiplot modunda tüm plotları resetle
+                    if (_isInitialized && _plotCounter > 0 && _formsPlot != null)
+                    {
+                        for (int i = 0; i < _plotCounter; i++)
+                        {
+                            try
+                            {
+                                var plot = _formsPlot.Multiplot.GetPlot(i);
+                                plot.Axes.AutoScale();
+                            }
+                            catch (Exception ex)
+                            {
+                                Log(LogLevel.Warning, $"Plot {i} resetlenirken hata: {ex.Message}");
+                            }
+                        }
+
+                        _formsPlot.Refresh();
+                        Log(LogLevel.Info, $"{_plotCounter} plot başarıyla resetlendi");
+                    }
+
+                    _resetRequested = false;
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    Log(LogLevel.Error, $"Reset işlemi sırasında hata: {ex.Message}");
+                    _resetRequested = false;
+                    return false;
+                }
+            }
         }
     }
 }
